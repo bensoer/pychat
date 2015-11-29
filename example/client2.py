@@ -13,24 +13,24 @@ serverSocket.bind((serverName, serverPort))
 
 def checkForReceiving():
     message, clientAddress = serverSocket.recvfrom(bufferSize)
-    print "Response: " + message
+    print ("Response: " + message.decode())
     threading.Timer(1, checkForReceiving).start()
 
 
 clientPort = 1400
 clientName = 'localhost'
 threading.Timer(1, checkForReceiving).start()
-print "Server is ready to recieve"
+print ("Server is ready to recieve")
 
 
 
 
 while True:
     clientSocket = socket(AF_INET, SOCK_DGRAM)
-    message = raw_input()
+    message = input()
     if message == '-1':
         sys.exit(0)
 
-    clientSocket.sendto(message, (clientName, clientPort))
+    clientSocket.sendto(message.encode(), (clientName, clientPort))
     #response, serverAddress = clientSocket.recvfrom(2048)
     clientSocket.close()

@@ -16,7 +16,7 @@ canCheck = 1
 
 def checkForReceiving():
     message, clientAddress = serverSocket.recvfrom(bufferSize)
-    print "Response: " + message
+    print("Response: " + message.decode())
     if canCheck == 1:
         t = threading.Timer(1, checkForReceiving)
         t.start()
@@ -31,23 +31,23 @@ clientName = 'localhost'
 #child.start()
 t = threading.Timer(1, checkForReceiving)
 t.start()
-print "Server is ready to recieve"
+print("Server is ready to recieve")
 
 
 while True:
     clientSocket = socket(AF_INET, SOCK_DGRAM)
-    message = raw_input()
+    message = input()
     if '-1' in message:
-        print "Quiting..Bye"
+        print("Quiting..Bye")
         canCheck = 0
         clientSocket.close()
         t.cancel()
         break
     else:
-        clientSocket.sendto(message, (clientName, clientPort))
+        clientSocket.sendto(message.encode(), (clientName, clientPort))
         #response, serverAddress = clientSocket.recvfrom(2048)
         clientSocket.close()
 
-print "made it here"
+print("made it here")
 canCheck = 0
 t.cancel()
