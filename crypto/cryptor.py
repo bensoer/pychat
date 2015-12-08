@@ -1,21 +1,23 @@
 __author__ = 'bensoer'
 
-from crypto.cryptor import Cryptor
+class Cryptor:
 
-class Decryptor(Cryptor):
+    def setAlgorithm(self, strAlgorithm):
+        self.strAlgorithm = strAlgorithm
+        self.strPackage = strAlgorithm.lower()
 
-    def __init__(self):
-        Cryptor.__init__(self)
-
-    def decrypt(self, message):
+    def testAlgorithm(self):
+        print(" -- Testing Algorithm Parameter -- ")
         try:
             pkg = __import__('crypto.algorithms.' + self.strPackage, fromlist=[self.strAlgorithm])
             mod = getattr(pkg, self.strAlgorithm)
             algorithm = mod()
-            return algorithm.decryptString(message)
+            algorithm.encryptString("Here is a message")
         except (Exception, AttributeError) as error:
             print("Import Of Algorithm Failed. Perhaps you used the wrong name ? The passed in algorithm was: " +
                   self.strAlgorithm)
             print("Note you must pass in the name of the class and casing matters. PyChat will handle resolving " +
                   "the package")
             raise error
+        finally:
+            print(" -- Testing Algorithm Parameter Complete -- ")

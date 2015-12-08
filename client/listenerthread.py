@@ -18,7 +18,7 @@ class ListenerThread(Thread):
         while self.__keepListening:
             try:
                 message, address = self.__socket.recvfrom(2048)
-                print("Message Recieved: " + message.decode())
+                print(message.decode())
             except Exception:
                 pass
 
