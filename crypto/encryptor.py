@@ -6,6 +6,7 @@ class Encryptor(Cryptor):
 
     def __init__(self):
         Cryptor.__init__(self)
+        self.setName("Encryptor")
 
     def encrypt(self, message):
         try:

@@ -4,6 +4,7 @@ import random
 from tools.argparcer import ArgParcer
 from client.listenerthread import ListenerThread
 from crypto.encryptor import Encryptor
+from crypto.decryptor import Decryptor
 __author__ = 'bensoer'
 
 '''
@@ -34,14 +35,20 @@ if username == "":
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.bind(('localhost', listeningPort))
 
-'create the listener socket for incoming messages'
-listenerThread = ListenerThread(clientSocket)
-listenerThread.start()
-
 'setup encryptor'
 encryptor = Encryptor()
 encryptor.setAlgorithm(algorithm)
 encryptor.testAlgorithm()
+
+'setup decryptor'
+decryptor = Decryptor()
+decryptor.setAlgorithm(algorithm)
+decryptor.testAlgorithm()
+
+
+'create the listener socket for incoming messages'
+listenerThread = ListenerThread(clientSocket, decryptor)
+listenerThread.start()
 
 'now start allowing user to type'
 
@@ -54,4 +61,5 @@ while True:
         break
     else:
         message = username + ": " + message
-    clientSocket.sendto(message.encode(), (host, port))
+        encryptedMessage = encryptor.encrypt(message)
+    clientSocket.sendto(encryptedMessage.encode(), (host, port))

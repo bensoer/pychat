@@ -5,10 +5,11 @@ class ListenerThread(Thread):
 
     __keepListening = True
 
-    def __init__(self, socket):
+    def __init__(self, socket, decryptor):
         Thread.__init__(self)
         self.__socket = socket
         self.__socket.setblocking(0)
+        self.__decryptor = decryptor
         print("Listener Thread Initialized")
 
     def stopThread(self):
@@ -18,7 +19,9 @@ class ListenerThread(Thread):
         while self.__keepListening:
             try:
                 message, address = self.__socket.recvfrom(2048)
-                print(message.decode())
+                encryptedMessage = message.decode()
+                decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                print(decryptedMessage)
             except Exception:
                 pass
 
