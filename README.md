@@ -8,10 +8,10 @@ sending data back and forth securely and minimizing options for external sources
 
 The example system has been configured to work with `python3.4`. <br><br>
 For the rest of the app:
-1) Install `virtualenv`
-2) Clone the project
-3) Create a local environment for `virtualenv`
-4) Import `requirements.txt` file into `virtualenv` to get all needed modules. PS: Currently there are none
+ 1. Install `virtualenv`
+ 2. Clone the project
+ 3. Create a local environment for `virtualenv`
+ 4. Import `requirements.txt` file into `virtualenv` to get all needed modules. PS: Currently there are none
 
 Start the program by calling
 ```python
