@@ -29,8 +29,8 @@ class Cryptor:
     :param strAlgorithm String - the algorithm to be dynamicaly loaded as a string
     '''
     def setAlgorithm(self, strAlgorithm):
-        self.__strAlgorithm = strAlgorithm
-        self.__strPackage = strAlgorithm.lower()
+        self._strAlgorithm = strAlgorithm
+        self._strPackage = strAlgorithm.lower()
 
     '''
     testAlgorithm tests the strAlgorithm string value as to whether it will dynamicaly load a class or not. The tester
@@ -41,16 +41,19 @@ class Cryptor:
     def testAlgorithm(self):
         print(" -- Testing Algorithm Parameter -- ")
         try:
-            pkg = __import__('crypto.algorithms.' + self.__strPackage, fromlist=[self.__strAlgorithm])
-            mod = getattr(pkg, self.__strAlgorithm)
-            algorithm = mod()
+            pkg = __import__('crypto.algorithms.' + self._strPackage, fromlist=[self._strAlgorithm])
+            mod = getattr(pkg, self._strAlgorithm)
+            algorithm = mod(self._arguments)
             algorithm.encryptString("Here is a message")
         except (Exception, AttributeError) as error:
             print("Import Of Algorithm Failed. Perhaps you used the wrong name ? The passed in algorithm was: " +
-                  self.__strAlgorithm)
+                  self._strAlgorithm)
             print("Note you must pass in the name of the class and casing matters. PyChat will handle resolving " +
                   "the package")
             print("Test Failed In The : " + self.getName())
             raise error
         finally:
             print(" -- Testing Algorithm Parameter Complete -- ")
+
+    def setArguments(self, arguments):
+        self._arguments = arguments

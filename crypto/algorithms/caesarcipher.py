@@ -1,6 +1,7 @@
 __author__ = 'bensoer'
 
-from .algorithminterface import AlgorithmInterface
+from crypto.algorithms.algorithminterface import AlgorithmInterface
+from tools.argparcer import ArgParcer
 
 '''
 CaesarCipher is an Algorithm using the CaesarCipher encryption techniques.
@@ -12,6 +13,13 @@ class CaesarCipher(AlgorithmInterface):
 
     def __init__(self):
         self.offset = 3
+
+    def __init__(self, arguments):
+        offset = ArgParcer.getValue(arguments, "-o")
+        if offset == "":
+            self.offset = 3
+        else:
+            self.offset = int(offset)
 
     def encryptString(self, unencryptedMessage):
         encryptedMessage = ""

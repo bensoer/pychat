@@ -21,3 +21,7 @@ class AlgorithmInterface(metaclass=ABCMeta):
     @abstractmethod
     def decryptString(self, encryptedMessage):
         raise NotImplementedError()
+
+    @abstractmethod
+    def __init__(self, arguments):
+        raise NotImplementedError()

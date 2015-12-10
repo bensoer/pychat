@@ -37,11 +37,13 @@ clientSocket.bind(('localhost', listeningPort))
 
 'setup encryptor'
 encryptor = Encryptor()
+encryptor.setArguments(arguments)
 encryptor.setAlgorithm(algorithm)
 encryptor.testAlgorithm()
 
 'setup decryptor'
 decryptor = Decryptor()
+decryptor.setArguments(arguments)
 decryptor.setAlgorithm(algorithm)
 decryptor.testAlgorithm()
 
