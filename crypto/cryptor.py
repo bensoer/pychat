@@ -8,6 +8,7 @@ and set the name at initialization
 class Cryptor:
 
     __name = ""
+    __loadedAlgorithm = None
 
     '''
     setName sets the name attribute for the Cryptor class. This attribute is referred to in debugging and presenting
@@ -42,9 +43,14 @@ class Cryptor:
         print(" -- Testing Algorithm Parameter -- ")
         try:
             pkg = __import__('crypto.algorithms.' + self._strPackage, fromlist=[self._strAlgorithm])
+            print("> Dynamic Package Load Successful")
             mod = getattr(pkg, self._strAlgorithm)
+            print("> Dynamic Class Load Successful")
             algorithm = mod(self._arguments)
+            print("> Instantiation Successful")
             algorithm.encryptString("Here is a message")
+            print("> Test Encryption Successful")
+            return True
         except (Exception, AttributeError) as error:
             print("Import Of Algorithm Failed. Perhaps you used the wrong name ? The passed in algorithm was: " +
                   self._strAlgorithm)
@@ -54,6 +60,14 @@ class Cryptor:
             raise error
         finally:
             print(" -- Testing Algorithm Parameter Complete -- ")
+
+
+
+    def loadAlgorithm(self):
+        print(" -- Loading Algorithm Into System -- ")
+        pkg = __import__('crypto.algorithms.' + self._strPackage, fromlist=[self._strAlgorithm])
+        mod = getattr(pkg, self._strAlgorithm)
+        self._loadedAlgorithm = mod(self._arguments)
 
     def setArguments(self, arguments):
         self._arguments = arguments

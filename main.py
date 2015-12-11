@@ -39,13 +39,15 @@ clientSocket.bind(('localhost', listeningPort))
 encryptor = Encryptor()
 encryptor.setArguments(arguments)
 encryptor.setAlgorithm(algorithm)
-encryptor.testAlgorithm()
+if encryptor.testAlgorithm():
+    encryptor.loadAlgorithm()
 
 'setup decryptor'
 decryptor = Decryptor()
 decryptor.setArguments(arguments)
 decryptor.setAlgorithm(algorithm)
-decryptor.testAlgorithm()
+if decryptor.testAlgorithm():
+    decryptor.loadAlgorithm()
 
 
 'create the listener socket for incoming messages'
