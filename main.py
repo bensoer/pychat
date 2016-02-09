@@ -21,6 +21,10 @@ PARAMETERS
 -a set encryption and decrytion algorithm
 '''
 
+
+
+
+
 arguments = sys.argv
 'fetch the arguments we need'
 host = ArgParcer.getValue(arguments, "-h")
@@ -66,10 +70,20 @@ if pid <= 0:
         'although this line will never be hit. its good to have as insurance'
         exit(0)
 else:
-    'now start allowing user to type'
+
+    'if program makes it here. We must be in the parent'
+    def signal_handler(signo, frame):
+        print('Terminating Chat Engine')
+        os.kill(pid, signal.SIGTERM)
+        print('Successsfuly Terminated Listener Process')
+        print('Now Self Terminating')
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
 
     print("Setup Configured. Chat has Been Configured")
 
+    'now start allowing user to type'
     while True:
         message = input()
 
@@ -81,6 +95,3 @@ else:
             message = username + ": " + message
             encryptedMessage = encryptor.encrypt(message)
             clientSocket.sendto(encryptedMessage.encode(), (host, port))
-
-
-

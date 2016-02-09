@@ -7,6 +7,14 @@ class ListenerProcess:
     __connections = {}
 
     def __init__(self, socket, decryptor):
+        '''
+        constructor. This sets up all attributes needed for the listener process to function
+        :param socket: Socket - the socket the listener process will listen on
+        :param decryptor: Decryptor - the decryption instance the recieved message will be put through before
+        printing to screen
+        :return: void
+        '''
+
         self.__socket = socket
         self.__socket.setblocking(0)
         self.__decryptor = decryptor
@@ -15,7 +23,7 @@ class ListenerProcess:
         fileno = self.__socket.fileno()
         self.__connections[fileno] = self.__socket
 
-        print("Listener Thread Initialized")
+        print("Listener Process Initialized")
 
 
     def start(self):
