@@ -73,8 +73,9 @@ else:
 
     signal.signal(signal.SIGINT, signal_handler)
 
+    'get and send the initialization message'
     initMessage = cryptor.getInitializationMessage()
-    if initMessage == "":
+    if initMessage != "":
         clientSocket.sendto(initMessage.encode(), (host, port))
 
     print("Setup Configured. Chat has Been Configured")
