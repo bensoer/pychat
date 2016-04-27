@@ -53,6 +53,7 @@ class Cryptor:
             mod = getattr(pkg, self._strAlgorithm)
             print("> Dynamic Class Load Successful")
             algorithm = mod(self._arguments)
+            #algorithm = mod()
             print("> Instantiation Successful")
             if isinstance(algorithm, AlgorithmInterface):
                 print("> Instantiated Class Is Inheriting AlgorithmInterface")
@@ -79,7 +80,7 @@ class Cryptor:
                   self._strAlgorithm)
             print("Note you must pass in the name of the class and casing matters. PyChat will handle resolving " +
                   "the package")
-            print("Test Failed In The : " + self.getName())
+            #print("Test Failed In The : " + self.getName())
             raise error
         finally:
             print(" -- Testing Algorithm Parameter Complete -- ")

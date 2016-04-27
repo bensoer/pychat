@@ -11,9 +11,6 @@ with an offset of 3. Decryption is simply reversing this process on the recieved
 '''
 class CaesarCipher(AlgorithmInterface):
 
-    def __init__(self):
-        self.offset = 3
-
     def __init__(self, arguments):
 
         # if they pass an o parameter, use this as the offset value
