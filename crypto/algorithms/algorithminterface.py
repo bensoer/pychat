@@ -36,6 +36,24 @@ class AlgorithmInterface(metaclass=ABCMeta):
         '''
         raise NotImplementedError()
 
+    def sendFirstMessage(self):
+        '''
+
+        :return: String - if returned value is not "", then it will be sent as is over the connection
+        '''
+
+        return ""
+
+    def receiveFirstMessage(self, firstMessage):
+        '''
+        receiveFirstMessage is called upon pychat recieving the first message from the listenerprocess.
+        :return: Boolean - status as to whether to print the firstMessage to console after calling this method.
+        Default returns True = first message will be written to console assuming it is a regular message. Return True
+        will be run through the descyption aglorithm
+        '''
+
+        return True
+
     @abstractmethod
     def __init__(self, arguments):
         '''

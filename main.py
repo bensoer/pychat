@@ -5,8 +5,7 @@ import os
 import signal
 from tools.argparcer import ArgParcer
 from client.listenerprocess import ListenerProcess
-from crypto.encryptor import Encryptor
-from crypto.decryptor import Decryptor
+from crypto.cryptor import Cryptor
 __author__ = 'bensoer'
 
 '''
@@ -41,19 +40,12 @@ if username == "":
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.bind(('localhost', listeningPort))
 
-'setup encryptor'
-encryptor = Encryptor()
-encryptor.setArguments(arguments)
-encryptor.setAlgorithm(algorithm)
-if encryptor.testAlgorithm():
-    encryptor.loadAlgorithm()
-
-'setup decryptor'
-decryptor = Decryptor()
-decryptor.setArguments(arguments)
-decryptor.setAlgorithm(algorithm)
-if decryptor.testAlgorithm():
-    decryptor.loadAlgorithm()
+'setup cryptor'
+cryptor = Cryptor()
+cryptor.setArguments(arguments)
+cryptor.setAlgorithm(algorithm)
+if cryptor.testAlgorithm():
+    cryptor.loadAlgorithm()
 
 'now fork to put the listener on a seperate process that won\'t block us'
 pid = os.fork()
@@ -65,7 +57,7 @@ if pid <= 0:
         exit(1)
     elif pid == 0:
         'else we are in the child then'
-        listenerProcess = ListenerProcess(clientSocket, decryptor)
+        listenerProcess = ListenerProcess(clientSocket, cryptor)
         listenerProcess.start()
         'although this line will never be hit. its good to have as insurance'
         exit(0)
@@ -81,6 +73,10 @@ else:
 
     signal.signal(signal.SIGINT, signal_handler)
 
+    initMessage = cryptor.getInitializationMessage()
+    if initMessage == "":
+        clientSocket.sendto(initMessage.encode(), (host, port))
+
     print("Setup Configured. Chat has Been Configured")
 
     'now start allowing user to type'
@@ -89,9 +85,12 @@ else:
 
         if message == "exit":
             'honey i killed the kids...'
+            print('Terminaitng Chat Engine')
             os.kill(pid, signal.SIGTERM)
+            print('Successfuly Terminated Listener Process')
+            print('Now Self Terminating')
             break
         else:
             message = username + ": " + message
-            encryptedMessage = encryptor.encrypt(message)
+            encryptedMessage = cryptor.encrypt(message)
             clientSocket.sendto(encryptedMessage.encode(), (host, port))

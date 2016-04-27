@@ -11,7 +11,10 @@ and set the name at initialization
 class Cryptor:
 
     __name = ""
-    __loadedAlgorithm = None
+    _strPackage = ""
+    _strAlgorithm = ""
+    _loadedAlgorithm = None
+
 
     '''
     setName sets the name attribute for the Cryptor class. This attribute is referred to in debugging and presenting
@@ -91,3 +94,17 @@ class Cryptor:
 
     def setArguments(self, arguments):
         self._arguments = arguments
+
+    # -- Encryption Methods --
+    def encrypt(self, message):
+        return self._loadedAlgorithm.encryptString(message)
+
+    def getInitializationMessage(self):
+        return self._loadedAlgorithm.sendFirstMessage()
+
+    # -- Decryption Methods --
+    def decrypt(self, message):
+        return self._loadedAlgorithm.decryptString(message)
+
+    def giveFirstMessage(self, firstMessage):
+        return self._loadedAlgorithm.receiveFirstMessage(firstMessage)
