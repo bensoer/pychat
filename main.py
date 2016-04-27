@@ -62,18 +62,19 @@ if pid <= 0:
         'although this line will never be hit. its good to have as insurance'
         exit(0)
 else:
-
     'if program makes it here. We must be in the parent'
+
+    'setup Ctrl+C handler'
     def signal_handler(signo, frame):
         print('Terminating Chat Engine')
         os.kill(pid, signal.SIGTERM)
-        print('Successsfuly Terminated Listener Process')
+        print('Successfully Terminated Listener Process')
         print('Now Self Terminating')
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    'get and send the initialization message'
+    'get and send the initialization message from the algorithm'
     initMessage = cryptor.getInitializationMessage()
     if initMessage != "":
         clientSocket.sendto(initMessage.encode(), (host, port))
@@ -86,9 +87,9 @@ else:
 
         if message == "exit":
             'honey i killed the kids...'
-            print('Terminaitng Chat Engine')
+            print('Terminating Chat Engine')
             os.kill(pid, signal.SIGTERM)
-            print('Successfuly Terminated Listener Process')
+            print('Successfully Terminated Listener Process')
             print('Now Self Terminating')
             break
         else:
