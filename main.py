@@ -1,8 +1,10 @@
 from socket import *
 import sys
 import random
+import os
+import signal
 from tools.argparcer import ArgParcer
-from client.listenerthread import ListenerThread
+from client.listenerprocess import ListenerProcess
 from crypto.encryptor import Encryptor
 from crypto.decryptor import Decryptor
 __author__ = 'bensoer'
@@ -18,6 +20,10 @@ PARAMETERS
 -u [optional] set the username of the user. default is a random generated number
 -a set encryption and decrytion algorithm
 '''
+
+
+
+
 
 arguments = sys.argv
 'fetch the arguments we need'
@@ -49,21 +55,43 @@ decryptor.setAlgorithm(algorithm)
 if decryptor.testAlgorithm():
     decryptor.loadAlgorithm()
 
+'now fork to put the listener on a seperate process that won\'t block us'
+pid = os.fork()
+if pid <= 0:
 
-'create the listener socket for incoming messages'
-listenerThread = ListenerThread(clientSocket, decryptor)
-listenerThread.start()
+    if pid < 0:
+        'in case this is the error condition'
+        print("SystemError Generating Child Process. Terminating")
+        exit(1)
+    elif pid == 0:
+        'else we are in the child then'
+        listenerProcess = ListenerProcess(clientSocket, decryptor)
+        listenerProcess.start()
+        'although this line will never be hit. its good to have as insurance'
+        exit(0)
+else:
 
-'now start allowing user to type'
+    'if program makes it here. We must be in the parent'
+    def signal_handler(signo, frame):
+        print('Terminating Chat Engine')
+        os.kill(pid, signal.SIGTERM)
+        print('Successsfuly Terminated Listener Process')
+        print('Now Self Terminating')
+        sys.exit(0)
 
-print("Setup Configured. Chat has Been Configured")
-while True:
-    message = input()
+    signal.signal(signal.SIGINT, signal_handler)
 
-    if message == "exit":
-        listenerThread.stopThread()
-        break
-    else:
-        message = username + ": " + message
-        encryptedMessage = encryptor.encrypt(message)
-    clientSocket.sendto(encryptedMessage.encode(), (host, port))
+    print("Setup Configured. Chat has Been Configured")
+
+    'now start allowing user to type'
+    while True:
+        message = input()
+
+        if message == "exit":
+            'honey i killed the kids...'
+            os.kill(pid, signal.SIGTERM)
+            break
+        else:
+            message = username + ": " + message
+            encryptedMessage = encryptor.encrypt(message)
+            clientSocket.sendto(encryptedMessage.encode(), (host, port))

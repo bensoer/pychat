@@ -16,12 +16,34 @@ class AlgorithmInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def encryptString(self, unencryptedMessage):
+        '''
+        encryptString is in charge of encrypting the passed in unencryptedMessage and applying whatever encryption
+        algorithm that the abstract class is implementing
+        :param unencryptedMessage: String - the message before it is encrypted
+        :return: String - the encrypted message, the result of applying the encryption process to the unencryptedMessage
+        variable
+        '''
         raise NotImplementedError()
 
     @abstractmethod
     def decryptString(self, encryptedMessage):
+        '''
+        decryptString is in charge of decrypting the passed in encryptedMessage and applying whatever decryption
+        algorithm that the class is implementing
+        :param encryptedMessage: String - the encrypted message needing to be decrypted
+        :return: String - the decrypted message, the result of applying the decryption process to the encryptedMessage
+        variable
+        '''
         raise NotImplementedError()
 
     @abstractmethod
     def __init__(self, arguments):
+        '''
+        for these algorithms to function, key parameters may need to be passed to the class in order for encryption and
+        decryption to be successful. Whatever class implementing the AglorithmInterface will need to have a constructor
+        that takes an arguments parameter. The arguments parameter is a copy of the arguments passed to the program upon
+        initialization
+        :param arguments: Array - The system initializations array containing argument passed and program start
+        :return: void
+        '''
         raise NotImplementedError()

@@ -1,5 +1,8 @@
 __author__ = 'bensoer'
 
+import types
+from crypto.algorithms.algorithminterface import AlgorithmInterface
+
 '''
 Cryptor is a Base class defining functionality for a Cryptographic class. This includes functionality for setting and
 testing the algorithm aswell as setting the name for the cryptographic class. It is recommended the child class call
@@ -48,8 +51,25 @@ class Cryptor:
             print("> Dynamic Class Load Successful")
             algorithm = mod(self._arguments)
             print("> Instantiation Successful")
-            algorithm.encryptString("Here is a message")
-            print("> Test Encryption Successful")
+            if isinstance(algorithm, AlgorithmInterface):
+                print("> Instantiated Class Is Inheriting AlgorithmInterface")
+            else:
+                print("> Instantiated Class Does Not Inherit AlgorithmInterface. Test Failure")
+                return False
+            encResponse = algorithm.encryptString("Here is a message")
+            if isinstance(encResponse, str):
+                print("> Test Encryption Successful")
+            else:
+                print("> Test Encryption Failed. A String Type Was Not Returned")
+                print("> Type Is: " + type(encResponse))
+                return False
+            decResponse = algorithm.decryptString("Here is a message")
+            if isinstance(decResponse, str):
+                 print("> Test Decryption Successful")
+            else:
+                print(">Test Decryption Failed. A String Type Was Not Returned")
+                print("> Type Is: " + type(decResponse))
+                return False
             return True
         except (Exception, AttributeError) as error:
             print("Import Of Algorithm Failed. Perhaps you used the wrong name ? The passed in algorithm was: " +
