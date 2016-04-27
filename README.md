@@ -15,7 +15,7 @@ For the rest of the app:
 
 Start the program by calling
 ```python
-python main.py -h localhost -l 7000 -lp 8000 -u bert -a CaesarCipher
+python main.py -h localhost -p 7000 -lp 8000 -u bert -a CaesarCipher
 ```
 This will start PyChat on `localhost` calling another user on port `7000` and listening for responses on `8000`. The converstion
 will be encrypted with a `CeasarCipher`. Your username for the other user will appear in this example as `bert`
@@ -26,7 +26,7 @@ See the `Parameters` section for all valid parameters
 | Parameter | Description |
 |-----------|-------------|
 | -h | Set the host PyChat will be communicating with |
-| -l | Set the port PyChat will be communicating with |
+| -p | Set the port PyChat will be communicating with |
 | -lp | Set the port PyChat will listen for incoming messages from |
 | -u | Set the username for this user. Default is a random number |
 | -a | Set the encryption / decryption algorithm used to secure messages in transit |
