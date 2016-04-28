@@ -11,9 +11,6 @@ with an offset of 3. Decryption is simply reversing this process on the recieved
 '''
 class CaesarCipher(AlgorithmInterface):
 
-    def __init__(self):
-        self.offset = 3
-
     def __init__(self, arguments):
 
         # if they pass an o parameter, use this as the offset value
@@ -30,13 +27,13 @@ class CaesarCipher(AlgorithmInterface):
         back into whatever ascii character represents this new ordinal. This then represents the encrypted letter. Each
         letter has this process applied to them before the completely encryptedMessage is returned
         :param unencryptedMessage: String - the unencrypted message
-        :return:String - the CaesarCipher encrypted message
+        :return:Bytes[] - the CaesarCipher encrypted message as bytes
         '''
         encryptedMessage = ""
         for letter in unencryptedMessage:
             encryptedLetter = chr(ord(letter) + self.offset)
             encryptedMessage += encryptedLetter
-        return encryptedMessage
+        return encryptedMessage.encode()
 
     def decryptString(self, encryptedMessage):
         '''
@@ -45,9 +42,10 @@ class CaesarCipher(AlgorithmInterface):
         method. It then converts the offset ordinal value back into whatever ascii character represents this new ordinal.
         This then represents the decrypted letter. Each letter has this process applied to them before the completely
         encryptedMessage is returned
-        :param encryptedMessage: String - the encrypted message
+        :param encryptedMessage: Bytes[] - the encrypted message as a byte array
         :return:String - the CaesarCipher unencrypted message
         '''
+        encryptedMessage = encryptedMessage.decode()
         decryptedMessage = ""
         for letter in encryptedMessage:
             decryptedLetter = chr(ord(letter) - self.offset)

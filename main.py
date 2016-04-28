@@ -5,8 +5,7 @@ import os
 import signal
 from tools.argparcer import ArgParcer
 from client.listenerprocess import ListenerProcess
-from crypto.encryptor import Encryptor
-from crypto.decryptor import Decryptor
+from crypto.cryptor import Cryptor
 __author__ = 'bensoer'
 
 '''
@@ -41,19 +40,12 @@ if username == "":
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.bind(('localhost', listeningPort))
 
-'setup encryptor'
-encryptor = Encryptor()
-encryptor.setArguments(arguments)
-encryptor.setAlgorithm(algorithm)
-if encryptor.testAlgorithm():
-    encryptor.loadAlgorithm()
-
-'setup decryptor'
-decryptor = Decryptor()
-decryptor.setArguments(arguments)
-decryptor.setAlgorithm(algorithm)
-if decryptor.testAlgorithm():
-    decryptor.loadAlgorithm()
+'setup cryptor'
+cryptor = Cryptor()
+cryptor.setArguments(arguments)
+cryptor.setAlgorithm(algorithm)
+if cryptor.testAlgorithm():
+    cryptor.loadAlgorithm()
 
 'now fork to put the listener on a seperate process that won\'t block us'
 pid = os.fork()
@@ -65,21 +57,27 @@ if pid <= 0:
         exit(1)
     elif pid == 0:
         'else we are in the child then'
-        listenerProcess = ListenerProcess(clientSocket, decryptor)
+        listenerProcess = ListenerProcess(clientSocket, cryptor)
         listenerProcess.start()
         'although this line will never be hit. its good to have as insurance'
         exit(0)
 else:
-
     'if program makes it here. We must be in the parent'
+
+    'setup Ctrl+C handler'
     def signal_handler(signo, frame):
         print('Terminating Chat Engine')
         os.kill(pid, signal.SIGTERM)
-        print('Successsfuly Terminated Listener Process')
+        print('Successfully Terminated Listener Process')
         print('Now Self Terminating')
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
+
+    'get and send the initialization message from the algorithm'
+    initMessage = cryptor.getInitializationMessage()
+    if len(initMessage) > 0:
+        clientSocket.sendto(initMessage, (host, port))
 
     print("Setup Configured. Chat has Been Configured")
 
@@ -89,9 +87,12 @@ else:
 
         if message == "exit":
             'honey i killed the kids...'
+            print('Terminating Chat Engine')
             os.kill(pid, signal.SIGTERM)
+            print('Successfully Terminated Listener Process')
+            print('Now Self Terminating')
             break
         else:
             message = username + ": " + message
-            encryptedMessage = encryptor.encrypt(message)
-            clientSocket.sendto(encryptedMessage.encode(), (host, port))
+            encryptedMessage = cryptor.encrypt(message)
+            clientSocket.sendto(encryptedMessage, (host, port))
