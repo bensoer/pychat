@@ -77,7 +77,5 @@ class AESCipher(AlgorithmInterface):
         #'''
         iv = encryptedMessage[:AES.block_size]
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
-        print(type(encryptedMessage))
-        print(str(len(encryptedMessage[AES.block_size:])))
         decryptedMessage = cipher.decrypt(encryptedMessage[AES.block_size:])
         return self._unpad(decryptedMessage).decode('utf-8')
