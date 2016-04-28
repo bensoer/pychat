@@ -76,8 +76,8 @@ else:
 
     'get and send the initialization message from the algorithm'
     initMessage = cryptor.getInitializationMessage()
-    if initMessage != "":
-        clientSocket.sendto(initMessage.encode(), (host, port))
+    if len(initMessage) > 0:
+        clientSocket.sendto(initMessage, (host, port))
 
     print("Setup Configured. Chat has Been Configured")
 
@@ -95,4 +95,4 @@ else:
         else:
             message = username + ": " + message
             encryptedMessage = cryptor.encrypt(message)
-            clientSocket.sendto(encryptedMessage.encode(), (host, port))
+            clientSocket.sendto(encryptedMessage, (host, port))

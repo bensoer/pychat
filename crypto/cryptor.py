@@ -61,13 +61,13 @@ class Cryptor:
                 print("> Instantiated Class Does Not Inherit AlgorithmInterface. Test Failure")
                 return False
             encResponse = algorithm.encryptString("Here is a message")
-            if isinstance(encResponse, str):
+            if isinstance(encResponse, bytes):
                 print("> Test Encryption Successful")
             else:
                 print("> Test Encryption Failed. A String Type Was Not Returned")
                 print("> Type Is: %s" % type(encResponse))
                 return False
-            decResponse = algorithm.decryptString("Here is a message")
+            decResponse = algorithm.decryptString("Here is a message".encode())
             if isinstance(decResponse, str):
                  print("> Test Decryption Successful")
             else:
@@ -97,6 +97,7 @@ class Cryptor:
         self._arguments = arguments
 
     # -- Encryption Methods --
+    # encrypt will take the message that arrives as a string and then return them as bytes
     def encrypt(self, message):
         return self._loadedAlgorithm.encryptString(message)
 
@@ -104,6 +105,7 @@ class Cryptor:
         return self._loadedAlgorithm.sendFirstMessage()
 
     # -- Decryption Methods --
+    # decrypt will take a message that is in bytes and then return them as a string
     def decrypt(self, message):
         return self._loadedAlgorithm.decryptString(message)
 

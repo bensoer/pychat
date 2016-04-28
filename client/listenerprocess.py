@@ -47,7 +47,7 @@ class ListenerProcess:
                     socket = self.__connections[fd]
                     message, address = socket.recvfrom(2048)
 
-                    encryptedMessage = message.decode()
+                    encryptedMessage = message
 
                     #if we haven't recieved the first message yet then this one is it
                     if self.__firstMessageReceived == False:
