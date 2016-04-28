@@ -65,7 +65,7 @@ class Cryptor:
                 print("> Test Encryption Successful")
             else:
                 print("> Test Encryption Failed. A String Type Was Not Returned")
-                print("> Type Is: " + type(encResponse))
+                print("> Type Is: %s" % type(encResponse))
                 return False
             decResponse = algorithm.decryptString("Here is a message")
             if isinstance(decResponse, str):
