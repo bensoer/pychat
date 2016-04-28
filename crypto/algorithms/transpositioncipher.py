@@ -37,10 +37,10 @@ class TranspositionCipher(AlgorithmInterface):
 
         positionsList = self.__createAlphabeticalIndexListOfKey(self.__key)
 
-        print(positionsList)
+        #print(positionsList)
         self.__mapper.append(positionsList)
 
-        print(self.__mapper)
+        #print(self.__mapper)
 
     def __createAlphabeticalIndexListOfKey(self, key):
 
@@ -62,6 +62,14 @@ class TranspositionCipher(AlgorithmInterface):
     def __buildMapperWithMessage(self, message):
 
         keyLength = len(self.__key)
+        messageLength = len(message)
+        rows = messageLength / keyLength
+        extra = messageLength % keyLength
+
+        #print("key length: " + str(keyLength))
+        #print("message length: " + str(messageLength))
+        #print("rows needed: " + str(rows))
+        #print("extra bits: " + str(extra))
 
         messageIndex = 0
         while (messageIndex * keyLength) < len(message):
@@ -97,22 +105,83 @@ class TranspositionCipher(AlgorithmInterface):
 
         self.__buildMapperWithMessage(unencryptedMessage)
 
+        #print(self.__mapper)
+        #print("mooving on")
+
         keyLength = len(self.__key)
+        joinedLists = list()
         encryptedMessage = ""
 
         for i in range(1, keyLength+1):
             listOfLetters = self.__getLettersUnderAlphabetIndex(i)
-            encryptedMessage = encryptedMessage.join(listOfLetters)
+            #print("index: " + str(i) + " has letters: ")
+            #print(listOfLetters)
+            joinedLists = joinedLists + listOfLetters
+
+        #print(joinedLists)
+        encryptedMessage = ''.join(joinedLists)
+        #print(encryptedMessage)
 
         self.__clearMapper()
-        return encryptedMessage
-
-    def __buildMapperWithEncryptedMessage(self, encryptedMessage):
-        pass
+        return encryptedMessage.encode()
 
 
-    def decryptString(selfs, encryptedMessage):
-        return encryptedMessage
+    def __insertLettersAtAlphabetIndex(self, index, letters):
+
+        lettersList = list(letters)
+        #print(lettersList)
+        for position, letter in enumerate(lettersList):
+            self.__mapper[2+position][index] = letter
+
+
+    def decryptString(self, encryptedMessage):
+        strEncryptedMessage = encryptedMessage.decode();
+
+        #print(self.__mapper)
+
+        keyLength = len(self.__key)
+        messageLength = len(strEncryptedMessage)
+        rows = int(messageLength) / int(keyLength)
+        extra = messageLength % keyLength
+
+        if extra > 0:
+            rows = rows + 1
+
+        for row in range(0, int(rows)):
+            newRow = [None] * keyLength
+
+            self.__mapper.append(newRow)
+
+        #print(self.__mapper)
+
+        for i in range(0, messageLength, int(rows)):
+            segment = strEncryptedMessage[i:(i+int(rows))]
+
+            index = (i / int(rows)) + 1
+
+            for pos, value in enumerate(self.__mapper[1]):
+                if index == value:
+                    #print("inserting segment: >" + str(segment) + "< into index: " + str(int(pos)))
+                    self.__insertLettersAtAlphabetIndex(int(pos), segment)
+
+
+
+        #print(self.__mapper)
+
+        fullLists = list()
+        for i in range(2, len(self.__mapper)):
+            #print("loop " + str(i))
+            mapRow = self.__mapper[i]
+            #print(mapRow)
+            fullLists = fullLists + mapRow
+
+        #print(fullLists)
+
+        fullSegment = ''.join(fullLists)
+        fullSegment = fullSegment.replace('*', '')
+
+        self.__clearMapper()
+        return fullSegment
 
 
 
