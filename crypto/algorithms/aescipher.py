@@ -48,7 +48,7 @@ class AESCipher(AlgorithmInterface):
         self.key = b'this is a 16 bit'
         ## if they pass a k parameter, use as the key
         #key = ArgParcer.getValue(arguments, "-k")
-    #if key == "":
+        #if key == "":
         #    # this should throw an error as they need to pass a symetric key
         #else:
         #    self.key = bytes(unencryptedMessage, encoding='utf-8')
@@ -56,8 +56,7 @@ class AESCipher(AlgorithmInterface):
         #    # or compute a hash of required length
 
     def _pad(self, s):
-        s = s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) % AES.block_size)
-        return s
+        return s + (AES.block_size - len(s) % AES.block_size) * str(chr(AES.block_size - len(s) % AES.block_size))
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]
@@ -66,14 +65,14 @@ class AESCipher(AlgorithmInterface):
         #'''
         #this is a comment
         #'''
-        print('plaintext: ' + unencryptedMessage)
+        print('plaintext: ' + unencryptedMessage + " length: " + str(len(unencryptedMessage)))
         paddedMessage = self._pad(unencryptedMessage)
-        print('padded: ' + paddedMessage)
+        print('padded length: ' + str(len(paddedMessage)))
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         encryptedMessage = iv + cipher.encrypt(paddedMessage)
         print('encrypted: ' + str(encryptedMessage))
-        return str(encryptedMessage)
+        return encryptedMessage
 
     def decryptString(self, encryptedMessage):
         #'''
@@ -81,5 +80,7 @@ class AESCipher(AlgorithmInterface):
         #'''
         iv = encryptedMessage[:AES.block_size]
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        print(type(encryptedMessage))
+        print(str(len(encryptedMessage[AES.block_size:])))
         decryptedMessage = cipher.decrypt(encryptedMessage[AES.block_size:])
-        return decryptedMessage
+        return str(decryptedMessage)
