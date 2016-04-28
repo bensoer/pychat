@@ -2,9 +2,9 @@ __author__ = 'kbohlen'
 
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 
-#import base64
 from Crypto.Cipher import AES
 from Crypto import Random
+from Crypto.Hash import SHA256
 
 from tools.argparcer import ArgParcer
 
@@ -45,15 +45,15 @@ that OpenVPN uses.
 class AESCipher(AlgorithmInterface):
     
     def __init__(self, arguments):
-        self.key = b'this is a 16 bit'
-        ## if they pass a k parameter, use as the key
-        #key = ArgParcer.getValue(arguments, "-k")
-        #if key == "":
-        #    # this should throw an error as they need to pass a symetric key
-        #else:
-        #    self.key = bytes(unencryptedMessage, encoding='utf-8')
-        #    # either check for required length
-        #    # or compute a hash of required length
+        # if they pass a k parameter, use as the password
+        password = ArgParcer.getValue(arguments, "-k")
+        while password == "":
+            password = input("AES needs a passkey: ")
+        # this is not actually going to be used as the passkey for AES
+        # we are going to create a 256bit key from the given secret password
+        h = SHA256.new()
+        h.update(bytes(password, 'utf-8'))
+        self.key = h.digest()
 
     def _pad(self, s):
         return s + (AES.block_size - len(s) % AES.block_size) * str(chr(AES.block_size - len(s) % AES.block_size))
@@ -65,13 +65,10 @@ class AESCipher(AlgorithmInterface):
         #'''
         #this is a comment
         #'''
-        print('plaintext: ' + unencryptedMessage + " length: " + str(len(unencryptedMessage)))
         paddedMessage = self._pad(unencryptedMessage)
-        print('padded length: ' + str(len(paddedMessage)))
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         encryptedMessage = iv + cipher.encrypt(paddedMessage)
-        print('encrypted: ' + str(encryptedMessage))
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
@@ -83,4 +80,4 @@ class AESCipher(AlgorithmInterface):
         print(type(encryptedMessage))
         print(str(len(encryptedMessage[AES.block_size:])))
         decryptedMessage = cipher.decrypt(encryptedMessage[AES.block_size:])
-        return str(decryptedMessage)
+        return self._unpad(decryptedMessage).decode('utf-8')
