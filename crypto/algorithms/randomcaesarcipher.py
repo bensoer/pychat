@@ -72,9 +72,10 @@ class RandomCaesarCipher(AlgorithmInterface):
 
             encryptedLetter = self.__scrambledAlphabet[correctedIndex]
             encryptedMessage += encryptedLetter
-        return encryptedMessage
+        return encryptedMessage.encode()
 
     def decryptString(self, encryptedMessage):
+        encryptedMessage = encryptedMessage.decode()
         decryptedMessage = ""
         for letter in encryptedMessage:
 
