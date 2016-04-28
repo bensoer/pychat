@@ -11,7 +11,10 @@ and set the name at initialization
 class Cryptor:
 
     __name = ""
-    __loadedAlgorithm = None
+    _strPackage = ""
+    _strAlgorithm = ""
+    _loadedAlgorithm = None
+
 
     '''
     setName sets the name attribute for the Cryptor class. This attribute is referred to in debugging and presenting
@@ -50,6 +53,7 @@ class Cryptor:
             mod = getattr(pkg, self._strAlgorithm)
             print("> Dynamic Class Load Successful")
             algorithm = mod(self._arguments)
+            #algorithm = mod()
             print("> Instantiation Successful")
             if isinstance(algorithm, AlgorithmInterface):
                 print("> Instantiated Class Is Inheriting AlgorithmInterface")
@@ -57,13 +61,13 @@ class Cryptor:
                 print("> Instantiated Class Does Not Inherit AlgorithmInterface. Test Failure")
                 return False
             encResponse = algorithm.encryptString("Here is a message")
-            if isinstance(encResponse, str):
+            if isinstance(encResponse, bytes):
                 print("> Test Encryption Successful")
             else:
                 print("> Test Encryption Failed. A String Type Was Not Returned")
-                print("> Type Is: " + type(encResponse))
+                print("> Type Is: %s" % type(encResponse))
                 return False
-            decResponse = algorithm.decryptString("Here is a message")
+            decResponse = algorithm.decryptString("Here is a message".encode())
             if isinstance(decResponse, str):
                  print("> Test Decryption Successful")
             else:
@@ -76,7 +80,7 @@ class Cryptor:
                   self._strAlgorithm)
             print("Note you must pass in the name of the class and casing matters. PyChat will handle resolving " +
                   "the package")
-            print("Test Failed In The : " + self.getName())
+            #print("Test Failed In The : " + self.getName())
             raise error
         finally:
             print(" -- Testing Algorithm Parameter Complete -- ")
@@ -91,3 +95,19 @@ class Cryptor:
 
     def setArguments(self, arguments):
         self._arguments = arguments
+
+    # -- Encryption Methods --
+    # encrypt will take the message that arrives as a string and then return them as bytes
+    def encrypt(self, message):
+        return self._loadedAlgorithm.encryptString(message)
+
+    def getInitializationMessage(self):
+        return self._loadedAlgorithm.sendFirstMessage()
+
+    # -- Decryption Methods --
+    # decrypt will take a message that is in bytes and then return them as a string
+    def decrypt(self, message):
+        return self._loadedAlgorithm.decryptString(message)
+
+    def giveFirstMessage(self, firstMessage):
+        return self._loadedAlgorithm.receiveFirstMessage(firstMessage)

@@ -5,6 +5,7 @@ class ListenerProcess:
 
     __keepListening = True
     __connections = {}
+    __firstMessageReceived = False
 
     def __init__(self, socket, decryptor):
         '''
@@ -45,9 +46,27 @@ class ListenerProcess:
                 else:
                     socket = self.__connections[fd]
                     message, address = socket.recvfrom(2048)
-                    encryptedMessage = message.decode()
-                    decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
-                    print(decryptedMessage)
+
+                    encryptedMessage = message
+
+                    #if we haven't recieved the first message yet then this one is it
+                    if self.__firstMessageReceived == False:
+                        self.__firstMessageReceived = True
+                        # give the message first to the algorithm to determine whether we print it or not
+                        writeToConsole = self.__decryptor.giveFirstMessage(encryptedMessage)
+                        if writeToConsole == True:
+                            #if we are to write to console then decrypt the message using algorithms decryptor
+                            decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                            #if the message is empty though don't bother printing it
+                            if decryptedMessage != "":
+                                print(decryptedMessage)
+                    else:
+                        decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                        print(decryptedMessage)
+
+
+
+
 
             '''
             try:
