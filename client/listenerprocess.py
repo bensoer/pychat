@@ -1,0 +1,79 @@
+__author__ = 'bensoer'
+import select
+
+class ListenerProcess:
+
+    __keepListening = True
+    __connections = {}
+    __firstMessageReceived = False
+
+    def __init__(self, socket, decryptor):
+        '''
+        constructor. This sets up all attributes needed for the listener process to function
+        :param socket: Socket - the socket the listener process will listen on
+        :param decryptor: Decryptor - the decryption instance the recieved message will be put through before
+        printing to screen
+        :return: void
+        '''
+
+        self.__socket = socket
+        self.__socket.setblocking(0)
+        self.__decryptor = decryptor
+
+        'in python this is apparently the only way to remember what file descriptor belongs to what socket'
+        fileno = self.__socket.fileno()
+        self.__connections[fileno] = self.__socket
+
+        print("Listener Process Initialized")
+
+
+    def start(self):
+        '''
+        start is called by the parent process to initialize the child process task. This method is simply the kickoff
+        point of the child process, and auto contains it within a managed object
+        :return: void
+        '''
+
+        epoll = select.epoll()
+        epoll.register(self.__socket, (select.EPOLLIN | select.EPOLLERR | select.EPOLLHUP | select.EPOLLET))
+
+        while self.__keepListening:
+            events = epoll.poll()
+            for fd, eventType in events:
+                if eventType & (select.EPOLLHUP|select.EPOLLERR):
+                    print("SystemError Recieving Message. Epoll Errored. Closing Descriptor")
+                    epoll.unregister(fd)
+                else:
+                    socket = self.__connections[fd]
+                    message, address = socket.recvfrom(2048)
+
+                    encryptedMessage = message
+
+                    #if we haven't recieved the first message yet then this one is it
+                    if self.__firstMessageReceived == False:
+                        self.__firstMessageReceived = True
+                        # give the message first to the algorithm to determine whether we print it or not
+                        writeToConsole = self.__decryptor.giveFirstMessage(encryptedMessage)
+                        if writeToConsole == True:
+                            #if we are to write to console then decrypt the message using algorithms decryptor
+                            decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                            #if the message is empty though don't bother printing it
+                            if decryptedMessage != "":
+                                print(decryptedMessage)
+                    else:
+                        decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                        print(decryptedMessage)
+
+
+
+
+
+            '''
+            try:
+                message, address = self.__socket.recvfrom(2048)
+                encryptedMessage = message.decode()
+                decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                print(decryptedMessage)
+            except Exception:
+                pass
+            '''

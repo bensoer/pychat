@@ -6,23 +6,30 @@ sending data back and forth securely and minimizing options for external sources
 
 #Setup
 
-The example system has been configured to work with `python3.4`. <br><br>
-For the rest of the app:
- 1. Install `virtualenv`
- 2. Clone the project
- 3. Create a local environment for `virtualenv`
- 4. Import `requirements.txt` file into `virtualenv` to get all needed modules. PS: Currently there are none
+## Prerequisites
+You must have python 3.4 installed on your system. On linux this is available on most distros as `python3`. You can check by typing
+`python3 --version` into your linux bash
 
-Start the program by calling
+You will need to have pip installed aswell in order to download the `pycrypto` library needed for some of the algorithms
+
+## Installation
+
+For the rest of the app:
+ 1. Download the latest release from [https://github.com/bensoer/pychat/releases](https://github.com/bensoer/pychat/releases)
+ 2. Execute `sudo pip3 install -r requirements.txt`
+ 3. Start the program by calling
 ```python
-python main.py -h localhost -p 7000 -lp 8000 -u bert -a CaesarCipher
+python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a CaesarCipher
 ```
 This will start PyChat on `localhost` calling another user on port `7000` and listening for responses on `8000`. The converstion
-will be encrypted with a `CeasarCipher`. Your username for the other user will appear in this example as `bert`
+will be encrypted with a `CaesarCipher`. Your username for the other user will appear in this example as `bert`. Note that
+the CaesarCipher has additional optional parameters. Since we did not use them, default CaesarCipher setings were used. For details
+on these optional parameters to this example, see the `CaesarCipher` section in the `Available Encryption/Decryption Algorithms` 
+section of the readme.
 
-See the `Parameters` section for all valid parameters
+See the `Parameters` section for all common valid parameters
 
-###Parameters
+## Parameters
 | Parameter | Description |
 |-----------|-------------|
 | -h | Set the host PyChat will be communicating with |
@@ -31,39 +38,51 @@ See the `Parameters` section for all valid parameters
 | -u | Set the username for this user. Default is a random number |
 | -a | Set the encryption / decryption algorithm used to secure messages in transit |
 
-###Available Encryption/Decryption Algorithms
+## Available Encryption/Decryption Algorithms
 Pass the value to the `-a` parameter exactly as listed below to use the encryption algorithm
-####Implemented
-* CaesarCipher
 
-####NotImplemented
+
+### Implemented
+* CaesarCipher
 * RandomCaesarCipher
 * TranspositionCipher
+* AESCipher
+
+#### CaesarCipher
+In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is an optional parameter
+
+|Parameter | Description|
+|----------|------------|
+| -o | Set the offset value of how many letters down in the caesarcipher translation the algorithm should go|
+
+#### RandomCaesarCipher
+In addition to the above mentioned parameters. 2 other parameters can be passed to alter this algorithm. Neither parameter is requires
+
+|Parameter | Description|
+|----------|------------|
+| -s | Set the seed value for the rand. Used for generating the scrambled alphabet|
+| -o | Set the offset value of how many letters down in the caesarcipher translation the algorithm should go|
+
+#### TranspositionCipher
+In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter
+
+|Parameter | Description|
+|----------|------------|
+| -k | Set the key used for generating the transposition table|
+
+#### AESCipher
+In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter
+This does not do a secure Diffie-Hellman Key Exchange of randomly generated AES key, it uses SHA256 to hash the password passed by the user
+
+|Parameter | Description|
+|----------|------------|
+| -k | Set the password which is then turned into the 256bit key for encryption|
+
+#### NotImplemented
 * RSA
+* DES3
+* Blowfish
 
-##Using the Example
-After cloning the project you can start the example project simply by running `client.py` and then `client2.py`. Being
-UDP no connection setup is needed so either client can be started first. The example is configured to run on localhost
-on the same computer so you can watch a chat between two consoles. Thread management though has not been implemented
-well and thus when you are done hitting `Ctrl+C` will cause the console to close and possibly crash close, which is
-expected.
 
-#File Structure
-
-##Algorithms
-The algorithms folder contains all algorithms for various forms of encrypting and decrypting messages. All of these
-algorithm files must inherit from the `algorithminterface.py` file in order to conform to the application standards. The
-`decrypt.py` and `encrypt.py` files located in the crypto folder rely on the conforming so as to ensure appropriate
-methods are available to the client
-
-##Crypto
-The crypto folder contains the main `encryptor.py` and `decryptor.py` files which encrypt and decrypt data based on
-passed in parameters determining which algorithm to use. These classes are the main entries used by the client to
-encrypt and decrypt messages being sent
-
-##Client
-The client folder holds all logic for the client console's operations, including sending and recieving messages and then
-communicating with the crypto library to parse messages.
-
-The client is also in charge at initialization of taking in user parameters for the encryption and decryption algorithms.
-These are used by the encryption and decryption classes to determine what algorithms to use and what are available
+# Developer Notes
+_Apr 28/2016_ - Three new ciphers have been added! Second Release is coming!
