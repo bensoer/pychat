@@ -16,7 +16,7 @@ You will need to have pip installed aswell in order to download the `pycrypto` l
 
 For the rest of the app:
  1. Download the latest release from [https://github.com/bensoer/pychat/releases](https://github.com/bensoer/pychat/releases)
- 2. Execute `pip install -r requirements.txt`
+ 2. Execute `sudo pip3 install -r requirements.txt`
  3. Start the program by calling
 ```python
 python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a CaesarCipher
@@ -46,6 +46,7 @@ Pass the value to the `-a` parameter exactly as listed below to use the encrypti
 * CaesarCipher
 * RandomCaesarCipher
 * TranspositionCipher
+* AESCipher
 
 #### CaesarCipher
 In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is an optional parameter
@@ -62,8 +63,26 @@ In addition to the above mentioned parameters. 2 other parameters can be passed 
 | -s | Set the seed value for the rand. Used for generating the scrambled alphabet|
 | -o | Set the offset value of how many letters down in the caesarcipher translation the algorithm should go|
 
+#### TranspositionCipher
+In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter
+
+|Parameter | Description|
+|----------|------------|
+| -k | Set the key used for generating the transposition table|
+
+#### AESCipher
+In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter
+This does not do a secure Diffie-Hellman Key Exchange of randomly generated AES key, it uses SHA256 to hash the password passed by the user
+
+|Parameter | Description|
+|----------|------------|
+| -k | Set the password which is then turned into the 256bit key for encryption|
+
 #### NotImplemented
 * RSA
+* DES3
+* Blowfish
+
 
 # Developer Notes
 _Apr 28/2016_ - Three new ciphers have been added! Second Release is coming!
