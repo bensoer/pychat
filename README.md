@@ -30,8 +30,8 @@ section of the readme.
 See the `Parameters` section for all common valid parameters
 
 ## Parameters
-| Parameter | Description |
-|-----------|-------------|
+|Parameter | Description|
+|----------|------------|
 | -h | Set the host PyChat will be communicating with |
 | -p | Set the port PyChat will be communicating with |
 | -lp | Set the port PyChat will listen for incoming messages from |
@@ -41,22 +41,22 @@ See the `Parameters` section for all common valid parameters
 ## Available Encryption/Decryption Algorithms
 Pass the value to the `-a` parameter exactly as listed below to use the encryption algorithm
 
-
 ### Implemented
 * CaesarCipher
 * RandomCaesarCipher
 * TranspositionCipher
 * AESCipher
+* DES3Cipher
 
 #### CaesarCipher
-In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is an optional parameter
+In addition to the above mentioned parameters 1 other parameter can be passed to alter this algorithm. It is an optional parameter.
 
 |Parameter | Description|
 |----------|------------|
 | -o | Set the offset value of how many letters down in the caesarcipher translation the algorithm should go|
 
 #### RandomCaesarCipher
-In addition to the above mentioned parameters. 2 other parameters can be passed to alter this algorithm. Neither parameter is requires
+In addition to the above mentioned parameters 2 other parameters can be passed to alter this algorithm. Neither parameter is required.
 
 |Parameter | Description|
 |----------|------------|
@@ -64,25 +64,32 @@ In addition to the above mentioned parameters. 2 other parameters can be passed 
 | -o | Set the offset value of how many letters down in the caesarcipher translation the algorithm should go|
 
 #### TranspositionCipher
-In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter
+In addition to the above mentioned parameters 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter.
 
 |Parameter | Description|
 |----------|------------|
 | -k | Set the key used for generating the transposition table|
 
 #### AESCipher
-In addition to the above mentioned parameters. 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter
-This does not do a secure Diffie-Hellman Key Exchange of randomly generated AES key, it uses SHA256 to hash the password passed by the user
+In addition to the above mentioned parameters 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter.
+This does not do a secure Diffie-Hellman Key Exchange of a randomly generated AES key, it uses SHA256 to hash the password passed by the user.
 
 |Parameter | Description|
 |----------|------------|
 | -k | Set the password which is then turned into the 256bit key for encryption|
 
-#### NotImplemented
-* RSA
-* DES3
-* Blowfish
+#### DES3Cipher
+In addition to the above mentioned parameters 1 other parameter can be passed to alter this algorithm. It is a mandatory parameter.
 
+|Parameter | Description|
+|----------|------------|
+| -k | Set the key for encryption. It must be 16 characters long. Both users must enter the same key.|
+
+#### Not Implemented
+* RSA
+* DES
+* Blowfish
+* XOR
 
 # Developer Notes
 _Apr 28/2016_ - Three new ciphers have been added! Second Release is coming!
