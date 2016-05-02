@@ -29,7 +29,7 @@ is used to ensure distinct ciphertexts are produced even when the same
 plaintext is encrypted multiple times independently with the same key.
 
 PADDING:
-Block cuphers work only on units of data of a fixed length (BLOCK_SIZE), but
+Block ciphers work only on units of data of a fixed length (BLOCK_SIZE), but
 message length can vary. So some modes (namely ECB and CBC) require that the
 final block be padded before encryption. This is done by adding null bytes to
 the plaintext to increase it's length to a multiple of the BLOCK_SIZE, keeping
