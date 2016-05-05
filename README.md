@@ -85,7 +85,7 @@ In addition to the above mentioned parameters 1 other parameter can be passed to
 |----------|------------|
 | -k | Set the key for encryption. It must be 16 characters long. Both users must enter the same key.|
 
-#### Not Implemented
+### Not Implemented
 * RSA
 * DES
 * Blowfish
