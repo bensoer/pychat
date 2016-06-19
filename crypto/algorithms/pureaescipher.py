@@ -11,13 +11,13 @@ Description of PureAESCipher
 
 BLOCK_SIZE:
 The block size for the cipher object; must be 16 bytes per FIPS-197 aka the
-Federal Information Processing Standards Publication 197. Block size is
-defined as a variable in the AES class (AES.block_size = 16)
+Federal Information Processing Standards Publication 197.
 
 KEY_SIZE:
 The key size for the cipher object; can be 128, 192, or 256 bits as defined
 per FIPS-197; this is equivalent to 16, 24, or 32 bytes. The size of the key is
-proportional to the strength of the cipher
+proportional to the strength of the cipher, this implementation uses only uses
+the most secure key size of 256 bits (AES-256) requiring only 1 sbox.
 
 IV:
 Most block cipher modes require a unique binary sequence called an 
@@ -122,9 +122,9 @@ class PureAESCipher(AlgorithmInterface):
         return s[:-ord(s[len(s)-1:])]
 
     def encryptString(self, unencryptedMessage):
-        #'''
-        #this is a comment
-        #'''
+        ###
+        # this is a comment
+        ###
         paddedMessage = self._pad(unencryptedMessage)
         iv = 
         cipher = 
@@ -132,9 +132,9 @@ class PureAESCipher(AlgorithmInterface):
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
-        #'''
-        #The IV is the first block
-        #'''
+        ###
+        # The IV is the first block
+        ###
         iv = encryptedMessage[:self.block_size]
         cipher = 
         decryptedMessage = cipher.decrypt(encryptedMessage[self.block_size:])
