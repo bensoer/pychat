@@ -6,6 +6,9 @@ class ListenerProcess:
     __keepListening = True
     __connections = {}
     __firstMessageReceived = False
+    __firstMessage = b''
+    __rejectFirstMessageMatches = False
+    __replySent = False
 
     def __init__(self, socket, decryptor):
         '''
@@ -54,15 +57,38 @@ class ListenerProcess:
                         self.__firstMessageReceived = True
                         # give the message first to the algorithm to determine whether we print it or not
                         writeToConsole = self.__decryptor.giveFirstMessage(encryptedMessage)
+
+                        # check if a reply has been sent
+                        if self.__replySent == False:
+                            firstMessageToBeSent = self.__decryptor.getInitializationMessage()
+                            # if first message does exist then send it
+                            if len(firstMessageToBeSent) > 0:
+                                socket.sendto(firstMessageToBeSent, address)
+                            self.__replySent = True
+
+                            # keep track of this first message
+                            self.__firstMessage = encryptedMessage
+
                         if writeToConsole == True:
+                            # if you wanted to write to console, then everything should be able to write to console
+                            self.__rejectFirstMessageMatches = False
                             #if we are to write to console then decrypt the message using algorithms decryptor
                             decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
                             #if the message is empty though don't bother printing it
                             if decryptedMessage != "":
                                 print(decryptedMessage)
+                        else:
+                            # if you don't want firstMessage to write to console, assume u never want it to
+                            self.__rejectFirstMessageMatches = True
                     else:
-                        decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
-                        print(decryptedMessage)
+                        # drop anything that looks like the first message if rejection is set
+                        if self.__rejectFirstMessageMatches:
+                            if encryptedMessage != self.__firstMessage:
+                                decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                                print(decryptedMessage)
+                        else:
+                            decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                            print(decryptedMessage)
 
 
 
