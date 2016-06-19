@@ -21,10 +21,19 @@ PARAMETERS
 '''
 
 
-
-
-
 arguments = sys.argv
+
+'if no arguments passed. print help'
+if len(arguments) <= 1:
+    print("PyChat. A Console Chat Appliction Using Cryptographic Algorithms")
+    print("Parameters:")
+    print("\t -h : The host to connect to")
+    print("\t -p : The port to the host to connect to")
+    print("\t -lp : The port to receive messages over")
+    print("\t -u : Username for this user when sending message (optional. default uses a number)")
+    print("\t -a : Name of the Algorithm to be used in message transmission")
+    exit(0)
+
 'fetch the arguments we need'
 host = ArgParcer.getValue(arguments, "-h")
 port = int(ArgParcer.getValue(arguments, "-p"))
