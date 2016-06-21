@@ -47,6 +47,7 @@ Pass the value to the `-a` parameter exactly as listed below to use the encrypti
 * TranspositionCipher
 * AESCipher
 * DES3Cipher
+* RSAPublicKey
 
 #### CaesarCipher
 In addition to the above mentioned parameters 1 other parameter can be passed to alter this algorithm. It is an optional parameter.
@@ -86,10 +87,10 @@ In addition to the above mentioned parameters 1 other parameter can be passed to
 | -k | Set the key for encryption. It must be 16 characters long. Both users must enter the same key.|
 
 ### Not Implemented
-* RSA
-* DES
-* Blowfish
-* XOR
+* RSAPublicKey
+* DESCipher
+* BlowfishCipher
+* XORCipher
 
 # Developer Notes
 _Apr 28/2016_ - Three new ciphers have been added! Second Release is coming!
