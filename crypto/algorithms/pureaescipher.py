@@ -39,6 +39,47 @@ block operation to securely transform amounts of data larger than a block.
 https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
 This code uses CBC or Cipher Block Chaining as it is the same implimentation
 that OpenVPN uses.
+
+ALGORITHM:
+This pure implementation of the Advanced Encryption Standard uses the strongest
+256-bit keys. AES is an iterative cipher. It comprises of a series of
+operations performing substitutions and shuffling bits around.
+AES uses 10 rounds for 128-bit keys, 12 rounds for 192-bit keys, and 14 rounds
+for 256-bit keys. This implementation will therefore be using 14 rounds.
+
+ENCRYPTION PROCESS:
+
+   Cipher Key         Plaintext
+   (256 bit)          (128 bit)
+       |                  |
+       V                  V
+   Round Key0  --->  AddRoundKey
+   (128 bit)     ------------------
+                 |   SubBytes     |
+         Round1->|   ShiftRows    |
+                 |   MixColumns   |
+   Round Key1 -> |   AddRoundKey  |
+                 ------------------
+                        ... x14
+SubBytes- 
+The 16 input bytes are substituted by looking up a fixed table (sbox). The
+result is a matrix of four rows and four columns.
+
+ShiftRows-
+Performs a circular shift or rotate to each row of the 4x4 matrix. Each row is
+rotated by N-1 positions to the left, where N is the Nth row.
+
+MixColumns-
+Performs Galois Multiplication on each column of the 4x4 matrix. The result is
+completely new bytes in each of the columns. This step is not performed in the
+last round.
+
+AddRoundKey-
+All 128 bits of the matrix are XORed with the 128-bit RoundKey.
+
+DECRYPTION PROCESS:
+Simply the inverse of the encryption process. Just do everything backwards with
+the inverse processes. 
 '''
 class PureAESCipher(AlgorithmInterface):
 
@@ -115,12 +156,6 @@ class PureAESCipher(AlgorithmInterface):
         h.update(bytes(password, 'utf-8'))
         self.key = h.digest()
 
-    def _pad(self, s):
-        return s + (self.block_size - len(s) % self.block_size) * str(chr(self.block_size - len(s) % self.block_size))
-
-    def _unpad(self, s):
-        return s[:-ord(s[len(s)-1:])]
-
     def encryptString(self, unencryptedMessage):
         ###
         # this is a comment
@@ -139,3 +174,9 @@ class PureAESCipher(AlgorithmInterface):
         cipher = 
         decryptedMessage = cipher.decrypt(encryptedMessage[self.block_size:])
         return self._unpad(decryptedMessage).decode('utf-8')
+
+    def _pad(self, s):
+        return s + (self.block_size - len(s) % self.block_size) * str(chr(self.$
+
+    def _unpad(self, s):
+        return s[:-ord(s[len(s)-1:])]
