@@ -105,7 +105,7 @@ class PureAESCipher(AlgorithmInterface):
         0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
     ]
 
-    inv_sbox = 
+    sboxInv = 
     [
         0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
         0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB,
@@ -157,9 +157,9 @@ class PureAESCipher(AlgorithmInterface):
         self.key = h.digest()
 
     def encryptString(self, unencryptedMessage):
-        ###
-        # this is a comment
-        ###
+        '''
+        #this is a comment
+        '''
         paddedMessage = self._pad(unencryptedMessage)
         iv = 
         cipher = 
@@ -167,9 +167,9 @@ class PureAESCipher(AlgorithmInterface):
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
-        ###
+        '''
         # The IV is the first block
-        ###
+        '''
         iv = encryptedMessage[:self.block_size]
         cipher = 
         decryptedMessage = cipher.decrypt(encryptedMessage[self.block_size:])
@@ -180,3 +180,66 @@ class PureAESCipher(AlgorithmInterface):
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]
+
+    def _subBytes(self, block):
+        '''
+        sub the sbox value for each of the values in the matrix (block)
+        '''
+        for i in range(len(block)):
+            block[i] = sbox[block[i]]
+
+    def _subBytesInv(self, block):
+        '''
+        sub the sbox_inv value for each of the values in the matrix (block)
+        '''
+        for i in range(len(block)):
+            block[i] = sboxInv[block[i]]
+
+    def _rotate(self, row, n):
+        '''
+        return the original row circular shifted by n positions to the left
+        '''
+        return row[n:]+row[0:n]
+
+    def _shiftRows(self, block):
+        '''
+        for each row in the block call _rotate() with the appropiate offset to
+        the left
+        '''
+        for i in range(4):
+            block[i*4:i*4+4] = self._rotate(block[i*4:i*4+4],i)
+
+    def _shiftRowsInv(self, block):
+        '''
+        for each row in the block call _rotate() with the appropiate offset to
+        the right
+        '''
+        for i in range(4):
+            block[i*4:i*4+4] = self._rotate(block[i*4:i*4+4],-i)
+
+    def _galoisMul(self, a, b):
+        '''
+        Galois Multiplication of 8 bit characters a and b
+        Used in the column mixing
+        TBH not really sure what this does
+        '''
+        p = 0
+        for i in range(8):
+            if b & 1 == 1:
+                p ^= a
+            hiBitSet = a & 0x80
+            a <<= 1
+            s &= 0xFF
+            if hiBitSet:
+                a ^= 0x1b
+            b >>= 1
+        return p
+
+    def _mixColumn(self, column):
+
+    def _mixColumnInv(self, column):
+
+    def _mixColumns(self, block):
+
+    def _mixColumnsInv(self, block):
+
