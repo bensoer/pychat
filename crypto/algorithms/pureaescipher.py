@@ -145,6 +145,7 @@ class PureAESCipher(AlgorithmInterface):
     ]
     
     def __init__(self, arguments):
+        ''' 
         # if they pass a k parameter, use as the password
         password = ArgParcer.getValue(arguments, "-k")
         while password == "":
@@ -154,47 +155,47 @@ class PureAESCipher(AlgorithmInterface):
         h = hashlib.sha256()
         h.update(bytes(password, 'utf-8'))
         self.key = h.digest()
+        '''
 
     def encryptString(self, unencryptedMessage):
         ''' 
-        this is a comment
-        '''
         paddedMessage = self._pad(unencryptedMessage)
-        iv = 
-        cipher = 
+        iv =
+        cipher =
         encryptedMessage = iv + cipher.encrypt(paddedMessage)
         return encryptedMessage
+        '''
 
     def decryptString(self, encryptedMessage):
         ''' 
         The IV is the first block
-        '''
         iv = encryptedMessage[:self.block_size]
-        cipher = 
+        cipher =
         decryptedMessage = cipher.decrypt(encryptedMessage[self.block_size:])
         return self._unpad(decryptedMessage).decode('utf-8')
+        '''
 
     def _pad(self, s):
-        return s + (self.block_size - len(s) % self.block_size) * str(chr(self.$
+        return s + (self.block_size - len(s) % self.block_size) * str(chr(self.block_size - len(s) % self.block_size))
 
     def _unpad(self, s):
         return s[:-ord(s[len(s)-1:])]
 
-    def _subBytes(self, block):
+    def _subBytes(self, state):
         ''' 
-        sub the sbox value for each of the values in the matrix (block)
+        sub the sbox value for each of the values in the matrix (state)
         '''
         for i in range(16):
-            block[i] = sbox[block[i]]
-        return block
+            state[i] = sbox[state[i]]
+        return state
 
-    def _subBytesInv(self, block):
+    def _subBytesInv(self, state):
         ''' 
-        sub the sbox_inv value for each of the values in the matrix (block)
+        sub the sbox_inv value for each of the values in the matrix (state)
         '''
         for i in range(16):
-            block[i] = sboxInv[block[i]]
-        return block
+            state[i] = sboxInv[state[i]]
+        return state
 
     def _rotate(self, row, n):
         ''' 
@@ -202,23 +203,23 @@ class PureAESCipher(AlgorithmInterface):
         '''
         return row[n:]+row[0:n]
 
-    def _shiftRows(self, block):
+    def _shiftRows(self, state):
         ''' 
-        for each row in the block call _rotate() with the appropiate offset to
+        for each row in the state call _rotate() with the appropiate offset to
         the left
         '''
         for i in range(4):
-            block[i*4:i*4+4] = self._rotate(block[i*4:i*4+4],i)
-        return block
+            state[i*4:i*4+4] = self._rotate(state[i*4:i*4+4],i)
+        return state
 
-    def _shiftRowsInv(self, block):
+    def _shiftRowsInv(self, state):
         ''' 
-        for each row in the block call _rotate() with the appropiate offset to
+        for each row in the state call _rotate() with the appropiate offset to
         the right
         '''
         for i in range(4):
-            block[i*4:i*4+4] = self._rotate(block[i*4:i*4+4],-i)
-        return block
+            state[i*4:i*4+4] = self._rotate(state[i*4:i*4+4],-i)
+        return state
 
     def _galoisMul(self, a, b):
         ''' 
@@ -240,7 +241,7 @@ class PureAESCipher(AlgorithmInterface):
 
     def _mixColumn(self, column):
         ''' 
-        calls _galoisMul for 1 column of the block XORing results
+        calls _galoisMul for 1 column of the state XORing results
         makes a copy of column by recasting it as a list
         uses encrypttion multiplication values
         TBH I am not sure why this works
@@ -255,7 +256,7 @@ class PureAESCipher(AlgorithmInterface):
 
     def _mixColumnInv(self, column):
         ''' 
-        calls _galoisMul for 1 column of the block XORing results
+        calls _galoisMul for 1 column of the state XORing results
         makes a copy of column by recasting it as a list
         uses decryption multiplication values
         TBH I am not sure why this works
@@ -268,29 +269,29 @@ class PureAESCipher(AlgorithmInterface):
         column[3] = g(temp[3],14) ^ g(temp[2],9) ^ g(temp[1],13) ^ g(temp[0],11)
         return column
 
-    def _mixColumns(self, block):
+    def _mixColumns(self, state):
         ''' 
-        calls _mixColumn for each column in block
+        calls _mixColumn for each column in state
         iterates over the 4 columns
-        constructs column taking every 4th byte of block
+        constructs column taking every 4th byte of state
         '''
         for i in range(4):
-            column = block[i:i+16:4]
+            column = state[i:i+16:4]
             column = self.mixColumn(column)
-            block[i:i+16:4] = column
-        return block
+            state[i:i+16:4] = column
+        return state
 
-    def _mixColumnsInv(self, block):
+    def _mixColumnsInv(self, state):
         ''' 
         wrapper for mixColumnInv
         iterates over the 4 columns
-        constructs column taking every 4th byte of block
+        constructs column taking every 4th byte of state
         '''
         for i in range(4):
-            column = block[i:i+16:4]
+            column = state[i:i+16:4]
             column = self.mixColumnInv(column)
-            block[i:i+16:4] = column
-        return block
+            state[i:i+16:4] = column
+        return state
 
     def _core(self, word, iteration):
         ''' 
@@ -339,7 +340,6 @@ class PureAESCipher(AlgorithmInterface):
             for m in range(4):
                 expandedKey[currentSize] = expandedKey[currentSize - size] ^ t[m]
                 currentSize += 1
-
         return expandedKey
 
     def _createRoundKey(self, expandedKey, n):
@@ -348,60 +348,143 @@ class PureAESCipher(AlgorithmInterface):
         '''
         return expandedKey[(n*16):(n*16+16)]
 
-    def _addRoundKey(self, block, roundKey):
+    def _addRoundKey(self, state, roundKey):
         ''' 
-        XORs the round key to the block
+        XORs the round key to the state
         '''
         for i in range(16):
-            block[i] ^= roundKey[i]
-        return block
+            state[i] ^= roundKey[i]
+        return state
 
-    def _aesRound(self, block, roundKey):
+    def _aesRound(self, state, roundKey):
         ''' 
         a single round of AES encryption in order
         '''
-        block = self._subBytes(block)
-        block = self._shiftRows(block)
-        block = self._mixColumns(block)
-        block = self._addRoundKey(block, roundKey)
-        return block
+        state = self._subBytes(state)
+        state = self._shiftRows(state)
+        state = self._mixColumns(state)
+        state = self._addRoundKey(state, roundKey)
+        return state
 
-    def _aesRoundInv(self, block, roundKey):
+    def _aesRoundInv(self, state, roundKey):
         ''' 
         a single round of AES decryption in order
         '''
-        block = self._shiftRowsInv(block)
-        block = self._subBytesInv(block)
-        block = self._addRoundKey(block, roundKey)
-        block = self._mixColumnsInv(block)
-        return block
+        state = self._shiftRowsInv(state)
+        state = self._subBytesInv(state)
+        state = self._addRoundKey(state, roundKey)
+        state = self._mixColumnsInv(state)
+        return state
 
-    def _aesMain(self, block, expandedKey, numRounds):
+    def _aesMain(self, state, expandedKey, numRounds):
         ''' 
         perform initial AES encryption operations, the standard rounds, and then the final operations
         it recreates a round key each round
         '''
-        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 0))
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 0))
         i = 1
         while i < numRounds:
-            block = self._aesRound(block, self._createRoundKey(expandedKey, 16*i))
+            state = self._aesRound(state, self._createRoundKey(expandedKey, 16*i))
             i += 1
-        block = self._subBytes(block)
-        block = self._shiftRows(block)
-        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 16*numRounds))
-        return block
+        state = self._subBytes(state)
+        state = self._shiftRows(state)
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 16*numRounds))
+        return state
 
-    def _aesMainInv(self, block, expandedKey, numRounds):
+    def _aesMainInv(self, state, expandedKey, numRounds):
         ''' 
         perform initial AES decryption operations, the standard rounds, and the$
         it recreates a round key each round
         '''
-        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 16*numRounds))
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 16*numRounds))
         i = numRounds - 1
         while i > 0:
-            block = self._aesRoundInv(block, self._createRoundKey(expandedKey, 16*$
+            state = self._aesRoundInv(state, self._createRoundKey(expandedKey, 16*i))
             i -= 1
-        block = self._subBytesInv(block)
-        block = self._shiftRowsInv(block)
-        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 0)
-        return block
+        state = self._subBytesInv(state)
+        state = self._shiftRowsInv(state)
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 0)
+        return state
+
+    def _encryptBlock(self, block, key, size):
+        ''' 
+        encrypts a 128 bit input block of data with key and size given
+        AES operates on a 4 × 4 column-major order matrix
+        thus we need to transpose the input data
+        '''
+        output = [0] * 16
+        # the number of rounds
+        numRounds = 0
+        # the 128 bit block to encode refered to as 'state'
+        state = [0] * 16
+        # set the number of rounds
+        if size == 16: numRounds = 10
+        elif size == 24: numRounds = 12
+        elif size == 32: numRounds = 14
+        else: return None
+
+        # the expanded keySize
+        expandedKeySize = 16*(numRounds+1)
+
+        # Set the state values, for the state:
+        # a0,0 a0,1 a0,2 a0,3
+        # a1,0 a1,1 a1,2 a1,3
+        # a2,0 a2,1 a2,2 a2,3
+        # a3,0 a3,1 a3,2 a3,3
+        # the mapping order is a0,0 a1,0 a2,0 a3,0 a0,1 a1,1 ... a2,3 a3,3
+        #
+        # iterate over the columns
+        for i in range(4):
+            # iterate over the rows
+            for j in range(4):
+                state[(i+(j*4))] = block[(i*4)+j]
+
+        # expand the key into an 176, 208, 240 bytes key
+        expandedKey = self._expandKey(key, size, expandedKeySize)
+
+        # encrypt the state using the expandedKey
+        state = self._aesMain(state, expandedKey, numRounds)
+
+        # unmap the state again into the output
+        for k in range(4):
+            # iterate over the rows
+            for l in range(4):
+                output[(k*4)+l] = state[(k+(l*4))]
+        return output
+
+    def _decryptBlock(self, block, key, size):
+        ''' 
+        decrypts a 128 bit input block of data with key and size given
+        '''
+        output = [0] * 16
+        # the number of rounds
+        numRounds = 0
+        # the 128 bit block to decode
+        state = [0] * 16
+        # set the number of rounds
+        if size == 16: numRounds = 10
+        elif size == 24: numRounds = 12
+        elif size == 32: numRounds = 14
+        else: return None
+
+        # the expanded keySize
+        expandedKeySize = 16*(numRounds+1)
+
+        # iterate over the columns
+        for i in range(4):
+            # iterate over the rows
+            for j in range(4):
+                state[(i+(j*4))] = block[(i*4)+j]
+
+        # expand the key into an 176, 208, 240 bytes key
+        expandedKey = self._expandKey(key, size, expandedKeySize)
+
+        # decrypt the block using the expandedKey
+        state = self.aes_invMain(state, expandedKey, numRounds)
+
+        # unmap the block again into the output
+        for k in range(4):
+            # iterate over the rows
+            for l in range(4):
+                output[(k*4)+l] = state[(k+(l*4))]
+        return output
