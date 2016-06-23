@@ -2,11 +2,12 @@ __author__ = 'kbohlen'
 
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 
-import hashlib
+import os
+import math
 
 from tools.argparcer import ArgParcer
 
-'''
+''' 
 Description of PureAESCipher
 
 BLOCK_SIZE:
@@ -41,11 +42,9 @@ This code uses CBC or Cipher Block Chaining as it is the same implimentation
 that OpenVPN uses.
 
 ALGORITHM:
-This pure implementation of the Advanced Encryption Standard uses the strongest
-256-bit keys. AES is an iterative cipher. It comprises of a series of
-operations performing substitutions and shuffling bits around.
-AES uses 10 rounds for 128-bit keys, 12 rounds for 192-bit keys, and 14 rounds
-for 256-bit keys. This implementation will therefore be using 14 rounds.
+AES is an iterative cipher. It comprises of a series of operations performing
+substitutions and shuffling bits around. AES uses 10 rounds for 128-bit keys,
+12 rounds for 192-bit keys, and 14 rounds for 256-bit keys.
 
 ENCRYPTION PROCESS:
 
@@ -157,8 +156,8 @@ class PureAESCipher(AlgorithmInterface):
         self.key = h.digest()
 
     def encryptString(self, unencryptedMessage):
-        '''
-        #this is a comment
+        ''' 
+        this is a comment
         '''
         paddedMessage = self._pad(unencryptedMessage)
         iv = 
@@ -167,8 +166,8 @@ class PureAESCipher(AlgorithmInterface):
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
-        '''
-        # The IV is the first block
+        ''' 
+        The IV is the first block
         '''
         iv = encryptedMessage[:self.block_size]
         cipher = 
@@ -182,43 +181,47 @@ class PureAESCipher(AlgorithmInterface):
         return s[:-ord(s[len(s)-1:])]
 
     def _subBytes(self, block):
-        '''
+        ''' 
         sub the sbox value for each of the values in the matrix (block)
         '''
-        for i in range(len(block)):
+        for i in range(16):
             block[i] = sbox[block[i]]
+        return block
 
     def _subBytesInv(self, block):
-        '''
+        ''' 
         sub the sbox_inv value for each of the values in the matrix (block)
         '''
-        for i in range(len(block)):
+        for i in range(16):
             block[i] = sboxInv[block[i]]
+        return block
 
     def _rotate(self, row, n):
-        '''
-        return the original row circular shifted by n positions to the left
+        ''' 
+        return the original row circular shifted by n bytes to the left
         '''
         return row[n:]+row[0:n]
 
     def _shiftRows(self, block):
-        '''
+        ''' 
         for each row in the block call _rotate() with the appropiate offset to
         the left
         '''
         for i in range(4):
             block[i*4:i*4+4] = self._rotate(block[i*4:i*4+4],i)
+        return block
 
     def _shiftRowsInv(self, block):
-        '''
+        ''' 
         for each row in the block call _rotate() with the appropiate offset to
         the right
         '''
         for i in range(4):
             block[i*4:i*4+4] = self._rotate(block[i*4:i*4+4],-i)
+        return block
 
     def _galoisMul(self, a, b):
-        '''
+        ''' 
         Galois Multiplication of 8 bit characters a and b
         Used in the column mixing
         TBH not really sure what this does
@@ -236,10 +239,169 @@ class PureAESCipher(AlgorithmInterface):
         return p
 
     def _mixColumn(self, column):
+        ''' 
+        calls _galoisMul for 1 column of the block XORing results
+        makes a copy of column by recasting it as a list
+        uses encrypttion multiplication values
+        TBH I am not sure why this works
+        '''
+        temp = list(column)
+        g = self._galoisMul
+        column[0] = g(temp[0],2) ^ g(temp[3],1) ^ g(temp[2],1) ^ g(temp[1],3)
+        column[1] = g(temp[1],2) ^ g(temp[0],1) ^ g(temp[3],1) ^ g(temp[2],3)
+        column[2] = g(temp[2],2) ^ g(temp[1],1) ^ g(temp[0],1) ^ g(temp[3],3)
+        column[3] = g(temp[3],2) ^ g(temp[2],1) ^ g(temp[1],1) ^ g(temp[0],3)
+        return column
 
     def _mixColumnInv(self, column):
+        ''' 
+        calls _galoisMul for 1 column of the block XORing results
+        makes a copy of column by recasting it as a list
+        uses decryption multiplication values
+        TBH I am not sure why this works
+        '''
+        temp = list(column)
+        g = self._galoisMul
+        column[0] = g(temp[0],14) ^ g(temp[3],9) ^ g(temp[2],13) ^ g(temp[1],11)
+        column[1] = g(temp[1],14) ^ g(temp[0],9) ^ g(temp[3],13) ^ g(temp[2],11)
+        column[2] = g(temp[2],14) ^ g(temp[1],9) ^ g(temp[0],13) ^ g(temp[3],11)
+        column[3] = g(temp[3],14) ^ g(temp[2],9) ^ g(temp[1],13) ^ g(temp[0],11)
+        return column
 
     def _mixColumns(self, block):
+        ''' 
+        calls _mixColumn for each column in block
+        iterates over the 4 columns
+        constructs column taking every 4th byte of block
+        '''
+        for i in range(4):
+            column = block[i:i+16:4]
+            column = self.mixColumn(column)
+            block[i:i+16:4] = column
+        return block
 
     def _mixColumnsInv(self, block):
+        ''' 
+        wrapper for mixColumnInv
+        iterates over the 4 columns
+        constructs column taking every 4th byte of block
+        '''
+        for i in range(4):
+            column = block[i:i+16:4]
+            column = self.mixColumnInv(column)
+            block[i:i+16:4] = column
+        return block
 
+    def _core(self, word, iteration):
+        ''' 
+        Rijndael key schedule core
+        '''
+        # rotate the 32-bit word 8 bits(1 byte) to the left
+        word = self._rotate(word, 1)
+        # apply sbox substitution on all 4 bytes of the 32-bit word
+        for i in range(4):
+            word[i] = self.sbox[word[i]]
+        # XOR the output of the rcon operation with i to the first part
+        # (leftmost) only
+        word[0] = word[0] ^ self.rcon[iteration]
+        return word
+
+    def _expandKey(self, key, size, expandedKeySize):
+        ''' 
+        Rijndael's key expansion
+        Expands an 128,192,256 key into an 176,208,240 bytes key
+        expandedKey is a char list of appropiate size
+        key is the non-expanded key
+        '''
+        # current expanded keySize, in bytes
+        currentSize = 0
+        rconIteration = 1
+        expandedKey = [0] * expandedKeySize
+        # set the 16, 24, 32 bytes of the expanded key to the input key
+        for i in range(size):
+            expandedKey[i] = key[i]
+        currentSize += size
+
+        while currentSize < expandedKeySize:
+            # assign the previous 4 bytes to the temporary value t
+            t = expandedKey[currentSize-4:currentSize]
+            # every 16,24,32 bytes we apply the core schedule to t
+            # and increment rconIteration afterwards
+            if currentSize % size == 0:
+                t = self._core(t, rconIteration)
+                rconIteration += 1
+            # for 256-bit keys, we add an extra sbox to the calculation
+            if (size == 32) and ((currentSize % size) == 16):
+                for l in range(4):
+                    t[l] = self.sbox[t[l]]
+            # XOR t with the four-byte block 16,24,32 bytes before the new expanded key
+            # this becomes the next four bytes in the expanded key
+            for m in range(4):
+                expandedKey[currentSize] = expandedKey[currentSize - size] ^ t[m]
+                currentSize += 1
+
+        return expandedKey
+
+    def _createRoundKey(self, expandedKey, n):
+        ''' 
+        creates a round key from the given expanded key and the round number
+        '''
+        return expandedKey[(n*16):(n*16+16)]
+
+    def _addRoundKey(self, block, roundKey):
+        ''' 
+        XORs the round key to the block
+        '''
+        for i in range(16):
+            block[i] ^= roundKey[i]
+        return block
+
+    def _aesRound(self, block, roundKey):
+        ''' 
+        a single round of AES encryption in order
+        '''
+        block = self._subBytes(block)
+        block = self._shiftRows(block)
+        block = self._mixColumns(block)
+        block = self._addRoundKey(block, roundKey)
+        return block
+
+    def _aesRoundInv(self, block, roundKey):
+        ''' 
+        a single round of AES decryption in order
+        '''
+        block = self._shiftRowsInv(block)
+        block = self._subBytesInv(block)
+        block = self._addRoundKey(block, roundKey)
+        block = self._mixColumnsInv(block)
+        return block
+
+    def _aesMain(self, block, expandedKey, numRounds):
+        ''' 
+        perform initial AES encryption operations, the standard rounds, and then the final operations
+        it recreates a round key each round
+        '''
+        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 0))
+        i = 1
+        while i < numRounds:
+            block = self._aesRound(block, self._createRoundKey(expandedKey, 16*i))
+            i += 1
+        block = self._subBytes(block)
+        block = self._shiftRows(block)
+        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 16*numRounds))
+        return block
+
+    def _aesMainInv(self, block, expandedKey, numRounds):
+        ''' 
+        perform initial AES decryption operations, the standard rounds, and the$
+        it recreates a round key each round
+        '''
+        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 16*numRounds))
+        i = numRounds - 1
+        while i > 0:
+            block = self._aesRoundInv(block, self._createRoundKey(expandedKey, 16*$
+            i -= 1
+        block = self._subBytesInv(block)
+        block = self._shiftRowsInv(block)
+        block = self._addRoundKey(block, self._createRoundKey(expandedKey, 0)
+        return block
