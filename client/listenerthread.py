@@ -1,52 +1,47 @@
 __author__ = 'bensoer'
+from threading import Thread
 import select
 
-class ListenerProcess:
+class ListenerThread(Thread):
 
     __keepListening = True
+
     __connections = {}
     __firstMessageReceived = False
     __firstMessage = b''
     __rejectFirstMessageMatches = False
     __replySent = False
+    __epoll = None
 
     def __init__(self, socket, decryptor):
-        '''
-        constructor. This sets up all attributes needed for the listener process to function
-        :param socket: Socket - the socket the listener process will listen on
-        :param decryptor: Decryptor - the decryption instance the recieved message will be put through before
-        printing to screen
-        :return: void
-        '''
-
+        Thread.__init__(self)
         self.__socket = socket
         self.__socket.setblocking(0)
         self.__decryptor = decryptor
 
-        'in python this is apparently the only way to remember what file descriptor belongs to what socket'
-
         fileno = self.__socket.fileno()
         self.__connections[fileno] = self.__socket
 
-        print("Listener Process Initialized")
+        print("Listener Thread Initialized")
 
+    def stopThread(self):
+        self.__keepListening = False
+        #self.__epoll.unregister(self.__socket.fileno())
+        #self.__socket.close()
+        #self.__epoll.close()
+        self._stop()
 
-    def start(self):
-        '''
-        start is called by the parent process to initialize the child process task. This method is simply the kickoff
-        point of the child process, and auto contains it within a managed object
-        :return: void
-        '''
+    def run(self):
 
-        epoll = select.epoll()
-        epoll.register(self.__socket, (select.EPOLLIN | select.EPOLLERR | select.EPOLLHUP | select.EPOLLET))
+        self.__epoll = select.epoll()
+        self.__epoll.register(self.__socket, (select.EPOLLIN | select.EPOLLERR | select.EPOLLHUP | select.EPOLLET))
 
         while self.__keepListening:
-            events = epoll.poll()
+            events = self.__epoll.poll()
             for fd, eventType in events:
                 if eventType & (select.EPOLLHUP|select.EPOLLERR):
                     print("SystemError Recieving Message. Epoll Errored. Closing Descriptor")
-                    epoll.unregister(fd)
+                    self.__epoll.unregister(fd)
                 else:
                     socket = self.__connections[fd]
                     message, address = socket.recvfrom(2048)
@@ -90,17 +85,3 @@ class ListenerProcess:
                         else:
                             decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
                             print(decryptedMessage)
-
-
-
-
-
-            '''
-            try:
-                message, address = self.__socket.recvfrom(2048)
-                encryptedMessage = message.decode()
-                decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
-                print(decryptedMessage)
-            except Exception:
-                pass
-            '''

@@ -4,7 +4,8 @@ import random
 import os
 import signal
 from tools.argparcer import ArgParcer
-from client.listenerprocess import ListenerProcess
+#from client.listenerprocess import ListenerProcess
+from client.listenerthread import ListenerThread
 from crypto.cryptor import Cryptor
 __author__ = 'bensoer'
 
@@ -48,6 +49,8 @@ if username == "":
 'create the socket to communicate over'
 clientSocket = socket(AF_INET, SOCK_DGRAM)
 clientSocket.bind(('localhost', listeningPort))
+clientSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+clientSocket.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
 
 'setup cryptor'
 cryptor = Cryptor()
@@ -56,8 +59,12 @@ cryptor.setAlgorithm(algorithm)
 if cryptor.testAlgorithm():
     cryptor.loadAlgorithm()
 
+'setup the listener thread'
+listenerThread = ListenerThread(clientSocket, cryptor)
+listenerThread.start()
+
 'now fork to put the listener on a seperate process that won\'t block us'
-pid = os.fork()
+'''pid = os.fork()
 if pid <= 0:
 
     if pid < 0:
@@ -72,36 +79,41 @@ if pid <= 0:
         exit(0)
 else:
     'if program makes it here. We must be in the parent'
+'''
 
-    'setup Ctrl+C handler'
-    def signal_handler(signo, frame):
+'setup Ctrl+C handler'
+def signal_handler(signo, frame):
+    print('Terminating Chat Engine')
+    #os.kill(pid, signal.SIGTERM)
+
+    listenerThread.stopThread()
+
+    print('Successfully Terminated Listener Process')
+    print('Now Self Terminating')
+    exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+'get and send the initialization message from the algorithm'
+initMessage = cryptor.getInitializationMessage()
+if len(initMessage) > 0:
+    clientSocket.sendto(initMessage, (host, port))
+
+print("Setup Configured. Chat has Been Configured")
+
+'now start allowing user to type'
+while True:
+    message = input()
+
+    if message == "exit":
+        'honey i killed the kids...'
         print('Terminating Chat Engine')
-        os.kill(pid, signal.SIGTERM)
+        #os.kill(pid, signal.SIGTERM)
+        listenerThread.stopThread()
         print('Successfully Terminated Listener Process')
         print('Now Self Terminating')
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
-
-    'get and send the initialization message from the algorithm'
-    initMessage = cryptor.getInitializationMessage()
-    if len(initMessage) > 0:
-        clientSocket.sendto(initMessage, (host, port))
-
-    print("Setup Configured. Chat has Been Configured")
-
-    'now start allowing user to type'
-    while True:
-        message = input()
-
-        if message == "exit":
-            'honey i killed the kids...'
-            print('Terminating Chat Engine')
-            os.kill(pid, signal.SIGTERM)
-            print('Successfully Terminated Listener Process')
-            print('Now Self Terminating')
-            break
-        else:
-            message = username + ": " + message
-            encryptedMessage = cryptor.encrypt(message)
-            clientSocket.sendto(encryptedMessage, (host, port))
+        break
+    else:
+        message = username + ": " + message
+        encryptedMessage = cryptor.encrypt(message)
+        clientSocket.sendto(encryptedMessage, (host, port))
