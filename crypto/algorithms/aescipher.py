@@ -8,7 +8,7 @@ from Crypto.Hash import SHA256
 
 from tools.argparcer import ArgParcer
 
-'''
+''' 
 Description of AESCipher
 
 BLOCK_SIZE:
@@ -56,15 +56,24 @@ class AESCipher(AlgorithmInterface):
         self.key = h.digest()
 
     def _pad(self, s):
-        return s + (AES.block_size - len(s) % AES.block_size) * str(chr(AES.block_size - len(s) % AES.block_size))
+        ''' 
+        return s padded to a multiple of 16-bytes following PCKS7 padding
+        '''
+        return s + (16 - len(s)%16) * chr(16 - len(s)%16)
 
     def _unpad(self, s):
+        ''' 
+        return s stripped of PKCS7 padding
+        '''
         return s[:-ord(s[len(s)-1:])]
 
     def encryptString(self, unencryptedMessage):
-        #'''
-        #this is a comment
-        #'''
+        ''' 
+        pads message lenght to multiple of 16
+        generates random initialization vector
+        encrypts message using key and IV
+        sends IV as first block and then encrypted message
+        '''
         paddedMessage = self._pad(unencryptedMessage)
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
@@ -72,9 +81,11 @@ class AESCipher(AlgorithmInterface):
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
-        #'''
-        #The IV is the first block
-        #'''
+        ''' 
+        gets the IV used to encrypt the message
+        creates cipher with given IV and assumedly the same key that was used for encryption
+        decrypts the message
+        '''
         iv = encryptedMessage[:AES.block_size]
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         decryptedMessage = cipher.decrypt(encryptedMessage[AES.block_size:])
