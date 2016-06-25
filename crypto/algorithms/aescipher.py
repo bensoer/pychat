@@ -59,7 +59,7 @@ class AESCipher(AlgorithmInterface):
         ''' 
         return s padded to a multiple of 16-bytes following PCKS7 padding
         '''
-        return s + (16 - len(s)%16) * chr(16 - len(s)%16)
+        return s + (AES.block_size - len(s)%AES.block_size) * chr(AES.block_size - len(s)%AES.block_size)
 
     def _unpad(self, s):
         ''' 
