@@ -4,7 +4,7 @@ from crypto.algorithms.algorithminterface import AlgorithmInterface
 
 from Crypto.PublicKey import RSA
 
-'''
+''' 
 Description of RSAPublicKey
 
 RSA is a public key cryptosystem, also called asymmetric ctyptography. It uses
@@ -21,7 +21,7 @@ knowledge of the prime numbers can feasibly decode the message.
 class RSAPublicKey(AlgorithmInterface):
 
     def __init__(self, arguments):
-        '''
+        ''' 
         generate the public / private key pair to be used
         '''
         key_size = 1024
@@ -30,21 +30,27 @@ class RSAPublicKey(AlgorithmInterface):
         self.other_publickey = None
 
     def sendFirstMessage(self):
+        ''' 
+        we need to send the other person our own public key
+        '''
         return self.publickey.exportKey(passphrase='pychat')
     
     def receiveFirstMessage(self, firstMessage):
+        ''' 
+        we should recieve the other persons public key
+        '''
         self.other_publickey = RSA.importKey(firstMessage, passphrase='pychat')
         return False #returning True attempts to decrypt the message (ATM)
 
     def encryptString(self, unencryptedMessage):
-        '''
+        ''' 
         must encrypt with other users public key (self.other_publickey)
         '''
         encryptedMessage = self.other_publickey.encrypt(unencryptedMessage)
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
-        '''
+        ''' 
         assuming that the encrypted message was encrypted with self.publickey
         generated above we can decrypt with our private key (self.key)
         '''

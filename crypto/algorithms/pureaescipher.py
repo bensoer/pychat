@@ -176,9 +176,15 @@ class PureAESCipher(AlgorithmInterface):
         '''
 
     def _pad(self, s):
-        return s + (self.block_size - len(s) % self.block_size) * str(chr(self.block_size - len(s) % self.block_size))
+        ''' 
+        return s padded to a multiple of 16-bytes following PCKS7 padding
+        '''
+        return s + (16 - len(s)%16) * chr(16 - len(s)%16)
 
     def _unpad(self, s):
+        ''' 
+        return s stripped of PKCS7 padding
+        '''
         return s[:-ord(s[len(s)-1:])]
 
     def _subBytes(self, state):
