@@ -5,8 +5,10 @@ import os
 import signal
 from tools.argparcer import ArgParcer
 #from client.listenerprocess import ListenerProcess
-from client.listenerthread import ListenerThread
+#from client.listenerthread import ListenerThread
+from client.listenermultiprocess import ListenerMultiProcess
 from crypto.cryptor import Cryptor
+from multiprocessing import Process, Pipe
 __author__ = 'bensoer'
 
 '''
@@ -59,9 +61,27 @@ cryptor.setAlgorithm(algorithm)
 if cryptor.testAlgorithm():
     cryptor.loadAlgorithm()
 
+#listenerMultiProcess = ListenerMultiProcess(clientSocket, cryptor)
+parent_conn, child_conn = Pipe()
+
 'setup the listener thread'
-listenerThread = ListenerThread(clientSocket, cryptor)
-listenerThread.start()
+def bootstrapper(child_conn_pipe):
+    components = child_conn_pipe.recv()
+    child_conn_pipe.close()
+    listenerMultiProcess = ListenerMultiProcess(components[0], components[1])
+    listenerMultiProcess.start()
+    # safety measure
+    exit(0)
+
+
+#listenerThread = ListenerThread(clientSocket, cryptor)
+#listenerThread.start()
+#multiprocess = Process(target=bootstrapper, args=(listenerMultiProcess))
+multiprocess = Process(target=bootstrapper, args=(child_conn,))
+multiprocess.start()
+parent_conn.send([clientSocket, cryptor])
+parent_conn.close()
+
 
 'now fork to put the listener on a seperate process that won\'t block us'
 '''pid = os.fork()
@@ -85,12 +105,11 @@ else:
 def signal_handler(signo, frame):
     print('Terminating Chat Engine')
     #os.kill(pid, signal.SIGTERM)
-
-    listenerThread.stopThread()
-
+    multiprocess.terminate()
     print('Successfully Terminated Listener Process')
     print('Now Self Terminating')
     exit(0)
+
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -109,7 +128,8 @@ while True:
         'honey i killed the kids...'
         print('Terminating Chat Engine')
         #os.kill(pid, signal.SIGTERM)
-        listenerThread.stopThread()
+        #listenerThread.stopThread()
+        multiprocess.terminate()
         print('Successfully Terminated Listener Process')
         print('Now Self Terminating')
         break
