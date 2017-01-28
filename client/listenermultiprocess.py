@@ -1,7 +1,7 @@
 __author__ = 'bensoer'
 import select
 
-class ListenerProcess:
+class ListenerMultiProcess:
 
     __keepListening = True
     __connections = {}
