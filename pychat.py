@@ -9,6 +9,9 @@ from tools.argparcer import ArgParcer
 from client.listenermultiprocess import ListenerMultiProcess
 from crypto.cryptor import Cryptor
 from multiprocessing import Process, Pipe
+import threading
+from tools.commandtype import CommandType
+
 __author__ = 'bensoer'
 
 '''
@@ -22,7 +25,6 @@ PARAMETERS
 -u [optional] set the username of the user. default is a random generated number
 -a set encryption and decrytion algorithm
 '''
-
 
 arguments = sys.argv
 
@@ -67,12 +69,33 @@ parent_conn, child_conn = Pipe()
 'setup the listener thread'
 def bootstrapper(child_conn_pipe):
     components = child_conn_pipe.recv()
-    child_conn_pipe.close()
-    listenerMultiProcess = ListenerMultiProcess(components[0], components[1])
+    #child_conn_pipe.close()
+    listenerMultiProcess = ListenerMultiProcess(components[0], components[1], child_conn_pipe)
     listenerMultiProcess.start()
     # safety measure
     exit(0)
 
+def recv_handler():
+    while True:
+        back_command = parent_conn.recv()
+        #print(back_command)
+        command_code = back_command[0]
+
+        # handler manipulation of cryptor here
+        if command_code == CommandType.GiveFirstMessage:
+            writeToConsole = cryptor.giveFirstMessage(back_command[1])
+            parent_conn.send([writeToConsole])
+        elif command_code == CommandType.GetInitializationMessage:
+            message = cryptor.getInitializationMessage()
+            parent_conn.send([message])
+        elif command_code == CommandType.Decrypt:
+            message = cryptor.decrypt(back_command[1])
+            parent_conn.send([message])
+        elif command_code == CommandType.Encrypt:
+            message = cryptor.encrypt(back_command[1])
+            parent_conn.send([message])
+        else:
+            print("Unknown Command Received")
 
 #listenerThread = ListenerThread(clientSocket, cryptor)
 #listenerThread.start()
@@ -80,7 +103,11 @@ def bootstrapper(child_conn_pipe):
 multiprocess = Process(target=bootstrapper, args=(child_conn,))
 multiprocess.start()
 parent_conn.send([clientSocket, cryptor])
-parent_conn.close()
+t = threading.Thread(target=recv_handler)
+t.daemon = True
+t.start()
+
+
 
 
 'now fork to put the listener on a seperate process that won\'t block us'
@@ -105,6 +132,7 @@ else:
 def signal_handler(signo, frame):
     print('Terminating Chat Engine')
     #os.kill(pid, signal.SIGTERM)
+    parent_conn.close()
     multiprocess.terminate()
     print('Successfully Terminated Listener Process')
     print('Now Self Terminating')
@@ -129,6 +157,7 @@ while True:
         print('Terminating Chat Engine')
         #os.kill(pid, signal.SIGTERM)
         #listenerThread.stopThread()
+        parent_conn.close()
         multiprocess.terminate()
         print('Successfully Terminated Listener Process')
         print('Now Self Terminating')

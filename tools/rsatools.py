@@ -35,5 +35,9 @@ def findCoPrimeToTotient(totient, startValue):
 
 def findDFromTotientAndE(totient, e):
     g, x, y = findExtendedGCD(totient, e)
+
+    # the d value can't be a negative number or 0, this is solved by incrmenting by totient
+    while y <= 0:
+        y += totient
     return y
 

@@ -71,53 +71,110 @@ class PureRSA(AlgorithmInterface):
         self.other_e = int(strE)
 
         strN = self.other_publicKey[colonIndex+1+eLen:]
-        self.other_n = strN
+        self.other_n = int(strN)
 
         print(self.other_n)
 
         return False  # return true for debug to display public key
 
     def encryptString(self, unencryptedMessage):
-        print(self.other_n)
-        plaintext_message_seg_length = int(math.floor(math.log(self.other_n), 2))
-        encrypted_message_seg_length = int(math.ceil(math.log(self.other_n, 2)))
 
-        # convert the message to all binary bits
-        binaryUnencryptedMessage = ''.join(format(ord(x), 'b') for x in unencryptedMessage)
+        plaintext_message_seg_length = int(math.floor(math.log(float(self.other_n), 2)))
+        encrypted_message_seg_length = int(math.ceil(math.log(float(self.other_n), 2)))
+
+        # convert the message to all binary bits - padd out to make sure they all are 8 bits long for the character
+        binaryUnencryptedMessage = ''.join(format(ord(x), '08b') for x in unencryptedMessage)
+        #print(binaryUnencryptedMessage)
+
+        # post pad the string to get an even number
+        while len(binaryUnencryptedMessage) % plaintext_message_seg_length != 0:
+            binaryUnencryptedMessage += '0'
+
+        #print(binaryUnencryptedMessage)
+
         # split it up into segments of plaintext_message_seg_length
         unencryptedMessageSegments = list()
         for i in range(0, len(binaryUnencryptedMessage), plaintext_message_seg_length):
-            unencryptedMessageSegments.append(binaryUnencryptedMessage[i: i+plaintext_message_seg_length])
-        #encrypt each segment using RSA
+            unencryptedMessageSegments.append(binaryUnencryptedMessage[i: i + plaintext_message_seg_length])
+
+        #print(unencryptedMessageSegments)
+
+        # encrypt each segment using RSA
         encryptedMessageSegments = list()
         for i in unencryptedMessageSegments:
+            #print("------------------")
+            #print(i)
             segmentInt = int(i, 2)  # converts string to int, interpreting it as in base 2
+            #print(str(segmentInt) + " - " + bin(segmentInt))
             encryptedSegmentInt = (segmentInt ** self.other_e) % self.other_n
-
-            encryptedSegmentBinary = format(encryptedSegmentInt, '0' + str(encrypted_message_seg_length))
+            #print(str(encryptedSegmentInt) + " - " + bin(encryptedSegmentInt))
+            encryptedSegmentBinary = format(encryptedSegmentInt, '0' + str(encrypted_message_seg_length) + 'b')
+            #print(encryptedSegmentBinary)
             encryptedMessageSegments.append(encryptedSegmentBinary)
 
+        #print("***********************")
+        #print(encryptedMessageSegments)
         encryptedMessageBinaryString = ''.join(encryptedMessageSegments)
+        #print(encryptedMessageBinaryString)
+
         encryptedMessageInt = int(encryptedMessageBinaryString, 2)
-        return encryptedMessageInt.to_bytes(byteorder=sys.byteorder)
+        #print(encryptedMessageInt)
+        #print(bin(encryptedMessageInt))
+
+        encryptedMessage = encryptedMessageInt.to_bytes(byteorder=sys.byteorder,
+                                                        length=math.ceil(len(encryptedMessageBinaryString) / 8))
+        return encryptedMessage
 
     def decryptString(self, encryptedMessage):
 
         plaintext_message_seg_length = int(math.floor(math.log(self.n, 2)))
         encrypted_message_seg_length = int(math.ceil(math.log(self.n, 2)))
 
-        # convert the message to all binary bits
-        binaryEncryptedMessage = ''.join(format(ord(x), 'b') for x in encryptedMessage)
-        # split it up into segments of plaintext_message_seg_length
+        number = int.from_bytes(encryptedMessage, byteorder=sys.byteorder, signed=False)
+        #print(number)
+
+        #print(" ** BEGINNING DECRYPTION **")
+
+        binaryEncryptedMessage = str(bin(number))[2:]
+        #print(binaryEncryptedMessage)
+
+        while len(binaryEncryptedMessage) % encrypted_message_seg_length != 0:
+            binaryEncryptedMessage = '0' + binaryEncryptedMessage
+
         encryptedMessageSegments = list()
         for i in range(0, len(binaryEncryptedMessage), encrypted_message_seg_length):
             encryptedMessageSegments.append(binaryEncryptedMessage[i: i + encrypted_message_seg_length])
-        # encrypt each segment using RSA
-        unencryptedMessage = ""
+
+        #print(encryptedMessageSegments)
+
+        unencryptedSegments = list()
         for i in encryptedMessageSegments:
+            #print("------------")
             segmentInt = int(i, 2)  # converts string to int, interpreting it as in base 2
-            unencryptedSegmentInt = (segmentInt ** self.d) % self.n
+            #print(i)
+            #print(str(segmentInt) + " - " + bin(segmentInt))
+            unencryptedSegmentInt = int((segmentInt ** self.d) % self.n)
+            #print(unencryptedSegmentInt)
 
-            unencryptedMessage += chr(unencryptedSegmentInt)
+            unencryptedSegmentBinary = format(unencryptedSegmentInt, '0' + str(plaintext_message_seg_length) + 'b')
+            #print(unencryptedSegmentBinary)
+            unencryptedSegments.append(unencryptedSegmentBinary)
 
-        return unencryptedMessage
+        #print(unencryptedSegments)
+        joinedSegments = ''.join(unencryptedSegments)
+        #print(joinedSegments)
+
+        letters = list()
+        for i in range(0, len(joinedSegments), 8):
+            letters.append(joinedSegments[i: i + 8])
+
+        #print(letters)
+
+        plainMessage = ""
+        for letter in letters:
+            letterInt = int(letter, 2)
+            character = chr(letterInt)
+            plainMessage += character
+
+        #print(plainMessage)
+        return plainMessage

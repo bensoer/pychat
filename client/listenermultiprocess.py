@@ -1,5 +1,6 @@
 __author__ = 'bensoer'
 import select
+from tools.commandtype import CommandType
 
 class ListenerMultiProcess:
 
@@ -10,7 +11,7 @@ class ListenerMultiProcess:
     __rejectFirstMessageMatches = False
     __replySent = False
 
-    def __init__(self, socket, decryptor):
+    def __init__(self, socket, decryptor, child_conn_pipe):
         '''
         constructor. This sets up all attributes needed for the listener process to function
         :param socket: Socket - the socket the listener process will listen on
@@ -22,6 +23,7 @@ class ListenerMultiProcess:
         self.__socket = socket
         self.__socket.setblocking(0)
         self.__decryptor = decryptor
+        self.__child_conn_pipe = child_conn_pipe
 
         'in python this is apparently the only way to remember what file descriptor belongs to what socket'
 
@@ -57,11 +59,16 @@ class ListenerMultiProcess:
                     if self.__firstMessageReceived == False:
                         self.__firstMessageReceived = True
                         # give the message first to the algorithm to determine whether we print it or not
-                        writeToConsole = self.__decryptor.giveFirstMessage(encryptedMessage)
+
+                        #writeToConsole = self.__decryptor.giveFirstMessage(encryptedMessage)
+                        self.__child_conn_pipe.send([CommandType.GiveFirstMessage, encryptedMessage])
+                        writeToConsole = self.__child_conn_pipe.recv()[0]
 
                         # check if a reply has been sent
                         if self.__replySent == False:
-                            firstMessageToBeSent = self.__decryptor.getInitializationMessage()
+                            #firstMessageToBeSent = self.__decryptor.getInitializationMessage()
+                            self.__child_conn_pipe.send([CommandType.GetInitializationMessage])
+                            firstMessageToBeSent = self.__child_conn_pipe.recv()[0]
                             # if first message does exist then send it
                             if len(firstMessageToBeSent) > 0:
                                 socket.sendto(firstMessageToBeSent, address)
@@ -74,7 +81,9 @@ class ListenerMultiProcess:
                             # if you wanted to write to console, then everything should be able to write to console
                             self.__rejectFirstMessageMatches = False
                             #if we are to write to console then decrypt the message using algorithms decryptor
-                            decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                            #decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                            self.__child_conn_pipe.send([CommandType.Decrypt, encryptedMessage])
+                            decryptedMessage = self.__child_conn_pipe.recv()[0]
                             #if the message is empty though don't bother printing it
                             if decryptedMessage != "":
                                 print(decryptedMessage)
@@ -85,10 +94,14 @@ class ListenerMultiProcess:
                         # drop anything that looks like the first message if rejection is set
                         if self.__rejectFirstMessageMatches:
                             if encryptedMessage != self.__firstMessage:
-                                decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                                #decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                                self.__child_conn_pipe.send([CommandType.Decrypt, encryptedMessage])
+                                decryptedMessage = self.__child_conn_pipe.recv()[0]
                                 print(decryptedMessage)
                         else:
-                            decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                            # decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                            self.__child_conn_pipe.send([CommandType.Decrypt, encryptedMessage])
+                            decryptedMessage = self.__child_conn_pipe.recv()[0]
                             print(decryptedMessage)
 
 
