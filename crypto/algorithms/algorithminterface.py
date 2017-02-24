@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+import logging
 __author__ = 'bensoer'
 
 '''
@@ -13,6 +14,8 @@ from this abstract class to ensure appropriate methods needed are implemented. F
 in the ability to find the module
 '''
 class AlgorithmInterface(metaclass=ABCMeta):
+
+    logger = logging.getLogger("pychat")
 
     @abstractmethod
     def encryptString(self, unencryptedMessage):
@@ -43,6 +46,7 @@ class AlgorithmInterface(metaclass=ABCMeta):
         :return: Bytes - if returned bytes length is > 0, then it will be sent as is over the connection
         '''
 
+        self.logger.debug("No Implementation Provided For Sending First Message. Default Functionality Assumed")
         return ""
 
     def receiveFirstMessage(self, firstMessage):
@@ -55,6 +59,8 @@ class AlgorithmInterface(metaclass=ABCMeta):
         will be run through the descyption aglorithm
         '''
 
+        self.logger.debug("No Implementation Provided For Receving The First Message. " +
+                          "First Message Is Assumed Actual Data")
         return True
 
     @abstractmethod

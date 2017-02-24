@@ -6,7 +6,6 @@ import tools.rsatools as RSATools
 import math
 import sys
 
-
 class PureRSA(AlgorithmInterface):
 
     n = None
@@ -56,8 +55,6 @@ class PureRSA(AlgorithmInterface):
             self.privateKey = str(strDLen) + ":" + strD + str(self.n)
 
     def sendFirstMessage(self):
-        # return self.publickey.exportKey(format='DER', passphrase=None, pkcs=1)
-        # return bytes(self.publickey)
         return self.publicKey.encode()
 
     def receiveFirstMessage(self, firstMessage):
@@ -73,53 +70,46 @@ class PureRSA(AlgorithmInterface):
         strN = self.other_publicKey[colonIndex+1+eLen:]
         self.other_n = int(strN)
 
-        print(self.other_n)
+        self.logger.debug("Received Public Key Values: N " + str(self.other_n) + ", E " + str(self.other_e))
 
         return False  # return true for debug to display public key
 
     def encryptString(self, unencryptedMessage):
-
         plaintext_message_seg_length = int(math.floor(math.log(float(self.other_n), 2)))
         encrypted_message_seg_length = int(math.ceil(math.log(float(self.other_n), 2)))
+        self.logger.debug("Based On Key Parameters, the maximum message lengths are as follows: Plaintext: "
+                     + str(plaintext_message_seg_length) + " Ciphertext: " + str(encrypted_message_seg_length))
 
         # convert the message to all binary bits - padd out to make sure they all are 8 bits long for the character
         binaryUnencryptedMessage = ''.join(format(ord(x), '08b') for x in unencryptedMessage)
-        #print(binaryUnencryptedMessage)
+        self.logger.debug(binaryUnencryptedMessage)
 
         # post pad the string to get an even number
         while len(binaryUnencryptedMessage) % plaintext_message_seg_length != 0:
             binaryUnencryptedMessage += '0'
 
-        #print(binaryUnencryptedMessage)
-
+        self.logger.debug(binaryUnencryptedMessage)
         # split it up into segments of plaintext_message_seg_length
         unencryptedMessageSegments = list()
         for i in range(0, len(binaryUnencryptedMessage), plaintext_message_seg_length):
             unencryptedMessageSegments.append(binaryUnencryptedMessage[i: i + plaintext_message_seg_length])
-
-        #print(unencryptedMessageSegments)
+        self.logger.debug(unencryptedMessageSegments)
 
         # encrypt each segment using RSA
         encryptedMessageSegments = list()
         for i in unencryptedMessageSegments:
-            #print("------------------")
-            #print(i)
             segmentInt = int(i, 2)  # converts string to int, interpreting it as in base 2
-            #print(str(segmentInt) + " - " + bin(segmentInt))
             encryptedSegmentInt = (segmentInt ** self.other_e) % self.other_n
-            #print(str(encryptedSegmentInt) + " - " + bin(encryptedSegmentInt))
             encryptedSegmentBinary = format(encryptedSegmentInt, '0' + str(encrypted_message_seg_length) + 'b')
-            #print(encryptedSegmentBinary)
             encryptedMessageSegments.append(encryptedSegmentBinary)
 
-        #print("***********************")
-        #print(encryptedMessageSegments)
+        self.logger.debug(encryptedMessageSegments)
         encryptedMessageBinaryString = ''.join(encryptedMessageSegments)
-        #print(encryptedMessageBinaryString)
+        self.logger.debug(encryptedMessageBinaryString)
 
         encryptedMessageInt = int(encryptedMessageBinaryString, 2)
-        #print(encryptedMessageInt)
-        #print(bin(encryptedMessageInt))
+        self.logger.debug(encryptedMessageInt)
+        self.logger.debug(bin(encryptedMessageInt))
 
         encryptedMessage = encryptedMessageInt.to_bytes(byteorder=sys.byteorder,
                                                         length=math.ceil(len(encryptedMessageBinaryString) / 8))
@@ -129,14 +119,14 @@ class PureRSA(AlgorithmInterface):
 
         plaintext_message_seg_length = int(math.floor(math.log(self.n, 2)))
         encrypted_message_seg_length = int(math.ceil(math.log(self.n, 2)))
+        self.logger.debug("Based On Key Parameters, the maximum message lengths are as follows: Plaintext: "
+                          + str(plaintext_message_seg_length) + " Ciphertext: " + str(encrypted_message_seg_length))
 
         number = int.from_bytes(encryptedMessage, byteorder=sys.byteorder, signed=False)
-        #print(number)
-
-        #print(" ** BEGINNING DECRYPTION **")
+        self.logger.debug(number)
 
         binaryEncryptedMessage = str(bin(number))[2:]
-        #print(binaryEncryptedMessage)
+        self.logger.debug(binaryEncryptedMessage)
 
         while len(binaryEncryptedMessage) % encrypted_message_seg_length != 0:
             binaryEncryptedMessage = '0' + binaryEncryptedMessage
@@ -145,30 +135,25 @@ class PureRSA(AlgorithmInterface):
         for i in range(0, len(binaryEncryptedMessage), encrypted_message_seg_length):
             encryptedMessageSegments.append(binaryEncryptedMessage[i: i + encrypted_message_seg_length])
 
-        #print(encryptedMessageSegments)
+        self.logger.debug(encryptedMessageSegments)
 
         unencryptedSegments = list()
         for i in encryptedMessageSegments:
-            #print("------------")
             segmentInt = int(i, 2)  # converts string to int, interpreting it as in base 2
-            #print(i)
-            #print(str(segmentInt) + " - " + bin(segmentInt))
             unencryptedSegmentInt = int((segmentInt ** self.d) % self.n)
-            #print(unencryptedSegmentInt)
 
             unencryptedSegmentBinary = format(unencryptedSegmentInt, '0' + str(plaintext_message_seg_length) + 'b')
-            #print(unencryptedSegmentBinary)
             unencryptedSegments.append(unencryptedSegmentBinary)
 
-        #print(unencryptedSegments)
+        self.logger.debug(unencryptedSegments)
         joinedSegments = ''.join(unencryptedSegments)
-        #print(joinedSegments)
+        self.logger.debug(joinedSegments)
 
         letters = list()
         for i in range(0, len(joinedSegments), 8):
             letters.append(joinedSegments[i: i + 8])
 
-        #print(letters)
+        self.logger.debug(letters)
 
         plainMessage = ""
         for letter in letters:
@@ -176,5 +161,4 @@ class PureRSA(AlgorithmInterface):
             character = chr(letterInt)
             plainMessage += character
 
-        #print(plainMessage)
         return plainMessage

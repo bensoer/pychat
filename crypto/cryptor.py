@@ -2,6 +2,8 @@ __author__ = 'bensoer'
 
 import types
 from crypto.algorithms.algorithminterface import AlgorithmInterface
+import logging
+logger = logging.getLogger('pychat')
 
 '''
 Cryptor is a Base class defining functionality for a Cryptographic class. This includes functionality for setting and
@@ -38,6 +40,7 @@ class Cryptor:
     def setAlgorithm(self, strAlgorithm):
         self._strAlgorithm = strAlgorithm
         self._strPackage = strAlgorithm.lower()
+        logger.debug("Set Algorithm. Algorithm Name: " + strAlgorithm + " Package Name: " + strAlgorithm.lower())
 
     '''
     testAlgorithm tests the strAlgorithm string value as to whether it will dynamicaly load a class or not. The tester
@@ -46,6 +49,7 @@ class Cryptor:
     failure this test will fail and throw an error from the dynamic loading functions of at what point failed
     '''
     def testAlgorithm(self):
+        logger.debug("Testing Of Algorithms Has Been Deprecated")
         '''
         print(" -- Testing Algorithm Parameter -- ")
         try:
@@ -92,25 +96,33 @@ class Cryptor:
 
     def loadAlgorithm(self):
         print(" -- Loading Algorithm Into System -- ")
+        logger.debug("Now Attempting To Dynamically Load Algorithm")
         pkg = __import__('crypto.algorithms.' + self._strPackage, fromlist=[self._strAlgorithm])
+        logger.debug("Package Import Successful. Now Attempting Class")
         mod = getattr(pkg, self._strAlgorithm)
+        logger.debug("Class Import Successful. Loading Into Attributes")
         self._loadedAlgorithm = mod(self._arguments)
 
     def setArguments(self, arguments):
+        logger.debug("Setting System Arguments As Attribute")
         self._arguments = arguments
 
     # -- Encryption Methods --
     # encrypt will take the message that arrives as a string and then return them as bytes
     def encrypt(self, message):
+        logger.debug("Passing Message To Loaded Algorithm To Encrypt")
         return self._loadedAlgorithm.encryptString(message)
 
     def getInitializationMessage(self):
+        logger.debug("Retrieving First Message to Send")
         return self._loadedAlgorithm.sendFirstMessage()
 
     # -- Decryption Methods --
     # decrypt will take a message that is in bytes and then return them as a string
     def decrypt(self, message):
+        logger.debug("Passing Message To Loaded Algorithm To Decrypt")
         return self._loadedAlgorithm.decryptString(message)
 
     def giveFirstMessage(self, firstMessage):
+        logger.debug("Passing First Received Message To The Algorithm")
         return self._loadedAlgorithm.receiveFirstMessage(firstMessage)

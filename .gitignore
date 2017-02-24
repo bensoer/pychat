@@ -3,3 +3,4 @@
 *.pyc
 *.py~
 *.py.save
+*.log
