@@ -66,7 +66,7 @@ if cryptor.testAlgorithm():
 #listenerMultiProcess = ListenerMultiProcess(clientSocket, cryptor)
 parent_conn, child_conn = Pipe()
 
-'setup the listener thread'
+'setup the listener multiprocess - passing it the pipe'
 def bootstrapper(child_conn_pipe):
     components = child_conn_pipe.recv()
     #child_conn_pipe.close()
@@ -75,6 +75,8 @@ def bootstrapper(child_conn_pipe):
     # safety measure
     exit(0)
 
+'''setup handler for pipe commands from the child multiprocess back to us. This is needed so as to keep the crypto
+object in sync'''
 def recv_handler():
     while True:
         back_command = parent_conn.recv()
@@ -97,17 +99,18 @@ def recv_handler():
         else:
             print("Unknown Command Received")
 
+'start the listener'
 #listenerThread = ListenerThread(clientSocket, cryptor)
 #listenerThread.start()
 #multiprocess = Process(target=bootstrapper, args=(listenerMultiProcess))
 multiprocess = Process(target=bootstrapper, args=(child_conn,))
 multiprocess.start()
+
+'start the thread to handle pipe commands'
 parent_conn.send([clientSocket, cryptor])
 t = threading.Thread(target=recv_handler)
-t.daemon = True
+t.daemon = True  # making it a daemon for some reason automatically deals with killing it once the main thread dies
 t.start()
-
-
 
 
 'now fork to put the listener on a seperate process that won\'t block us'
