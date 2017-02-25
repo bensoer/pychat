@@ -38,6 +38,7 @@ if len(arguments) <= 1:
     print("\t -lp : The port to receive messages over")
     print("\t -u : Username for this user when sending message (optional. default uses a number)")
     print("\t -a : Name of the Algorithm to be used in message transmission")
+    print("\t -v: An optional verification hash to be used and sent along with transmission.")
     exit(0)
 
 'fetch the arguments we need'
@@ -47,6 +48,7 @@ listeningPort = int(ArgParcer.getValue(arguments, "-lp"))
 username = ArgParcer.getValue(arguments, "-u")
 algorithm = ArgParcer.getValue(arguments, "-a")
 debugMode = ArgParcer.keyExists(arguments, "--DEBUG")
+verificationHash = ArgParcer.getValue(arguments, "-v")
 
 'configure username if it was defined'
 if username == "":
@@ -90,6 +92,9 @@ cryptor.setArguments(arguments)
 cryptor.setAlgorithm(algorithm)
 if cryptor.testAlgorithm():
     cryptor.loadAlgorithm()
+if verificationHash != "":
+    cryptor.setHash(verificationHash)
+    cryptor.loadHash()
 logger.debug("Cryptor Algorithm Setup")
 
 #listenerMultiProcess = ListenerMultiProcess(clientSocket, cryptor)

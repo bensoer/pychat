@@ -17,6 +17,10 @@ class Cryptor:
     _strAlgorithm = ""
     _loadedAlgorithm = None
 
+    _strHashPackage = ""
+    _strHash = ""
+    _loadedHash = None
+
 
     '''
     setName sets the name attribute for the Cryptor class. This attribute is referred to in debugging and presenting
@@ -41,6 +45,11 @@ class Cryptor:
         self._strAlgorithm = strAlgorithm
         self._strPackage = strAlgorithm.lower()
         logger.debug("Set Algorithm. Algorithm Name: " + strAlgorithm + " Package Name: " + strAlgorithm.lower())
+
+    def setHash(self, strHash):
+        self._strHash = strHash
+        self._strHashPackage = strHash.lower()
+        logger.debug("Set Hash. Hash Name: " + strHash + " Package Name: " + strHash.lower())
 
     '''
     testAlgorithm tests the strAlgorithm string value as to whether it will dynamicaly load a class or not. The tester
@@ -102,6 +111,15 @@ class Cryptor:
         mod = getattr(pkg, self._strAlgorithm)
         logger.debug("Class Import Successful. Loading Into Attributes")
         self._loadedAlgorithm = mod(self._arguments)
+
+    def loadHash(self):
+        print(" -- Loading Hash Into System -- ")
+        logger.debug("Now Attempting To Dynamically Load Hash")
+        pkg = __import__('crypto.hashes.' + self._strHashPackage, fromlist=[self._strHash])
+        logger.debug("Hash Package Import Successful. Now Attempting Class")
+        mod = getattr(pkg, self._strHash)
+        logger.debug("Hash Class Import Successful. Loading Into Attributes")
+        self._loadedHash = mod()
 
     def setArguments(self, arguments):
         logger.debug("Setting System Arguments As Attribute")
