@@ -19,3 +19,25 @@ class HashInterface(metaclass=ABCMeta):
         '''
         raise NotImplementedError
 
+    @abstractmethod
+    def getDigestSize(self):
+        '''
+        getDigestSize is a helper function used in the parsing process for seperating the hash from the encrypted message.
+        The passed in stringMessage is the same message passed into the hashString method and can be used to manually
+        generate the hash and then count the number of bytes in the resulting hash. This can be used for dynamic digest
+        sizes. For static sizes, a simple value can be returned.
+        :return: Int - The number of bytes in the resulted hash
+        '''
+        raise NotImplementedError
+
+    @abstractmethod
+    def isValidHash(self, stringMessage, hashBytes):
+        '''
+        isValidHash is a verification method that determines whether the passed in message will generate the passed in
+        hashBytes
+        :param stringMessage: the string message being verified whether it equals the hash
+        :param hashBytes: the hash as bytes that the stringMessage is being verified to match
+        :return: Boolean - the state of whether the stringMessage generates the passed in hashBytes. True means they
+        match
+        '''
+        raise NotImplementedError

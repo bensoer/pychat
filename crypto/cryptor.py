@@ -3,6 +3,7 @@ __author__ = 'bensoer'
 import types
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 import logging
+import binascii
 logger = logging.getLogger('pychat')
 
 '''
@@ -128,19 +129,55 @@ class Cryptor:
     # -- Encryption Methods --
     # encrypt will take the message that arrives as a string and then return them as bytes
     def encrypt(self, message):
-        logger.debug("Passing Message To Loaded Algorithm To Encrypt")
-        return self._loadedAlgorithm.encryptString(message)
+        if self._loadedHash is not None:
+            logger.debug("Hash Has Been Loaded For Client. Generating Hash First")
+            hashBytes = self._loadedHash.hashString(message)
+            logger.debug("Passing Message To Loaded Algorithm To Encrypt")
+            encryptedBytes = self._loadedAlgorithm.encryptString(message)
+            fullMessage = bytearray()
+            for byte in hashBytes:
+                fullMessage.append(byte)
+            for byte in encryptedBytes:
+                fullMessage.append(byte)
+            return fullMessage
+        else:
+            logger.debug("Passing Message To Loaded Algorithm To Encrypt")
+            return self._loadedAlgorithm.encryptString(message)
+
 
     def getInitializationMessage(self):
         logger.debug("Retrieving First Message to Send")
         return self._loadedAlgorithm.sendFirstMessage()
 
+    def getHashOfMessage(self, message):
+        logger.debug("Generating Hash For Message")
+        return self._loadedHash.hashString(message)
+
     # -- Decryption Methods --
     # decrypt will take a message that is in bytes and then return them as a string
     def decrypt(self, message):
-        logger.debug("Passing Message To Loaded Algorithm To Decrypt")
-        return self._loadedAlgorithm.decryptString(message)
+        if self._loadedHash is not None:
+
+            logger.debug("Hash Has Been Loaded For Client. Parsing Hash")
+            hashBytesLength = self._loadedHash.getDigestSize()
+            hashBytes = message[0:hashBytesLength]
+            messageBytes = message[hashBytesLength:]
+            logger.debug("Passing Message To Loaded Algorithm To Decrypt")
+            plaintextMessage = self._loadedAlgorithm.decryptString(messageBytes)
+
+            if not self._loadedHash.isValidHash(plaintextMessage, hashBytes):
+                print("WARNING: Hash Verification Failed For The Following Message")
+                print("Sent Hash: " + str(binascii.hexlify(hashBytes)))
+                print("Generated Hash: " + str(binascii.hexlify(self._loadedHash.hashString(plaintextMessage))))
+
+            return plaintextMessage
+        else:
+            logger.debug("Passing Message To Loaded Algorithm To Decrypt")
+            return self._loadedAlgorithm.decryptString(message)
 
     def giveFirstMessage(self, firstMessage):
         logger.debug("Passing First Received Message To The Algorithm")
         return self._loadedAlgorithm.receiveFirstMessage(firstMessage)
+
+    def getDigestSize(self, message):
+        logger.debug("Fetching Digest Length For Hash")
