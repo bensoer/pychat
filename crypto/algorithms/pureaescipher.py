@@ -38,8 +38,6 @@ MODES:
 The mode of operation describes how to repeatedly apply a cipher's single
 block operation to securely transform amounts of data larger than a block.
 https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
-This code uses CBC or Cipher Block Chaining as it is the same implimentation
-that OpenVPN uses.
 
 ALGORITHM:
 AES is an iterative cipher. It comprises of a series of operations performing
@@ -77,55 +75,81 @@ AddRoundKey-
 All 128 bits of the matrix are XORed with the 128-bit RoundKey.
 
 DECRYPTION PROCESS:
-Simply the inverse of the encryption process. Just do everything backwards with
-the inverse processes. 
+The inverse of the encryption process.
 '''
 
 class PureAESCipher(AlgorithmInterface):
 
     def __init__(self, arguments):
         ''' 
-        # if they pass a k parameter, use as the password
-        password = ArgParcer.getValue(arguments, '-k')
-        while password == '':
-            password = input('AES needs a passkey: ')
-        # this is not actually going to be used as the passkey for AES
-        # we are going to create a 256bit key from the given secret password
-        h = hashlib.sha256()
-        h.update(bytes(password, 'utf-8'))
-        self.key = h.digest()
+        Initialize mode of operation object
+        Verify that key and mode are correctly configured
         '''
-        self.cypherkey = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]
-        self.iv = [103,35,148,239,76,213,47,118,255,222,123,176,106,134,98,92]
         self.moo = AESModeOfOperation()
-        self.mode = self.moo.modeOfOperation["CBC"]
-        self.keysize = self.moo.aes.keySize["SIZE_256"]
+
+        # if they pass a k parameter, use as the key; otherwise default 32bit key
+        key = ArgParcer.getValue(arguments, '-k')
+        validKey = 0
+        while(not validKey):
+            if len(key) == 16:
+                self.cypherkey = list(bytes(key,'utf-8'))
+                self.keylen = self.moo.aes.keySize['SIZE_128']
+                validKey = 1
+            elif len(key) == 24:
+                self.cypherkey = list(bytes(key,'utf-8'))
+                self.keylen = self.moo.aes.keySize['SIZE_192']
+                validKey = 1
+            elif len(key) == 32:
+                self.cypherkey = list(bytes(key,'utf-8'))
+                self.keylen = self.moo.aes.keySize['SIZE_256']
+                validKey = 1
+            else:
+                print('ERROR: Key not correct size')
+                key = input('Enter key of size 16,24,32:')
+
+        #if they pass a m parameter, use as the mode; otherwise default CBC mode
+        mode = ArgParcer.getValue(arguments, '-m')
+        if mode == 'OFB':
+            self.mode = self.moo.modeOfOperation['OFB']
+        elif mode == 'CFB':
+            self.mode = self.moo.modeOfOperation['CFB']
+        else:
+            self.mode = self.moo.modeOfOperation['CBC']
+        
 
     def encryptString(self, unencryptedMessage):
         ''' 
-        comment
+        Process to encrypt string:
+        Generate a random 16 byte IV
+        Encrypt unencryptedMessage using mode and key defined in init
+        Return plaintext IV and encrypted cipher
         '''
+        iv = self._generateRandomKey(16)
 
-        self.ciph = self.moo.encrypt(unencryptedMessage, 
+        ciph = self.moo.encrypt(unencryptedMessage, 
                                      self.mode, 
                                      self.cypherkey, 
-                                     self.keysize, 
-                                     self.iv)
+                                     self.keylen, 
+                                     iv)
 
-        return bytes(self.ciph)
+        return iv + bytes(ciph)
 
     def decryptString(self, encryptedMessage):
         ''' 
-        comment
+        Process to decrypt string:
+        Pull IV transmitted in plaintext to use in decryption process
+        Decrypt cipher from remaining message
+        Return just he unencrypted message
         '''
+        iv = encryptedMessage[:16]
 
-        self.decr = self.moo.decrypt(encryptedMessage,  
+        decr = self.moo.decrypt(encryptedMessage[16:],  
                                      self.mode, 
                                      self.cypherkey, 
-                                     self.keysize, 
-                                     self.iv)
+                                     self.keylen, 
+                                     iv)
 
-        return self.decr
+        return decr
     
     def _generateRandomKey(self, keysize):
         '''
@@ -133,8 +157,7 @@ class PureAESCipher(AlgorithmInterface):
         The returned key is a string of bytes
         '''
         if keysize not in (16, 24, 32):
-            emsg = 'Invalid keysize, %s. Should be one of (16, 24, 32).'
-            #raise ValueError, emsg % keysize
+            print('ERROR: Invalid keysize, %s. Should be one of (16, 24, 32).')
         return os.urandom(keysize)
 
 
