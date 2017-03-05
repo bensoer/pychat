@@ -55,9 +55,9 @@ ENCRYPTION PROCESS:
    Round Key0  --->  AddRoundKey
    (128 bit)     ------------------
                  |   SubBytes     |
-         Round1->|   ShiftRows    |
+        Round1 ->|   ShiftRows    |
                  |   MixColumns   |
-   Round Key1 -> |   AddRoundKey  |
+    Round Key1 ->|   AddRoundKey  |
                  ------------------
                         ... x14
 SubBytes- 
@@ -80,22 +80,92 @@ DECRYPTION PROCESS:
 Simply the inverse of the encryption process. Just do everything backwards with
 the inverse processes. 
 '''
-def pad(s):
-    '''return s padded to a multiple of 16-bytes by PKCS7 padding'''
-    numpads = 16 - (len(s)%16)
-    return s + numpads*chr(numpads)
-
-def unpad(s):
-    '''return s stripped of PKCS7 padding'''
-    if len(s)%16 or not s:
-        raise ValueError("String of len %d can't be PCKS7-padded" % len(s))
-    numpads = ord(s[-1])
-    if numpads > 16:
-        raise ValueError("String ending with %r can't be PCKS7-padded" % s[-1])
-    return s[:-numpads]
 
 class PureAESCipher(AlgorithmInterface):
-    # valid key sizes
+
+    def __init__(self, arguments):
+        ''' 
+        # if they pass a k parameter, use as the password
+        password = ArgParcer.getValue(arguments, '-k')
+        while password == '':
+            password = input('AES needs a passkey: ')
+        # this is not actually going to be used as the passkey for AES
+        # we are going to create a 256bit key from the given secret password
+        h = hashlib.sha256()
+        h.update(bytes(password, 'utf-8'))
+        self.key = h.digest()
+        '''
+        self.cypherkey = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
+        self.iv = [103,35,148,239,76,213,47,118,255,222,123,176,106,134,98,92]
+        self.moo = AESModeOfOperation()
+
+    def encryptString(self, unencryptedMessage):
+        ''' 
+        test of block encryption
+        '''
+        #key = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84,143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
+        #size = 32
+        #block = [65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]
+
+        self.mode, self.orig_len, self.ciph = self.moo.encrypt(unencryptedMessage, 
+                                                               self.moo.modeOfOperation["CBC"], 
+                                                               self.cypherkey, 
+                                                               self.moo.aes.keySize["SIZE_128"], 
+                                                               self.iv)
+        print('Message length: ', self.orig_len)
+        print('Cipher length: ', len(self.ciph))
+
+        return bytes(self.ciph)
+
+    def decryptString(self, encryptedMessage):
+        ''' 
+        test of block decryption
+        '''
+        #key = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84,143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
+        #size = 32
+        #block = [65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]
+
+        self.decr = self.moo.decrypt(encryptedMessage, 
+                                     self.orig_len, 
+                                     self.mode, 
+                                     self.cypherkey, 
+                                     self.moo.aes.keySize["SIZE_128"], 
+                                     self.iv)
+
+        return self.decr
+    """
+    def _pad(s):
+        '''
+        return s padded to a multiple of 16-bytes by PKCS7 padding
+        '''
+        numpads = 16 - (len(s)%16)
+        return s + numpads*chr(numpads)
+
+    def _unpad(s):
+        '''
+        return s stripped of PKCS7 padding
+        '''
+        if len(s)%16 or not s:
+            raise ValueError("String of len %d can't be PCKS7-padded" % len(s))
+        numpads = ord(s[-1])
+        if numpads > 16:
+            raise ValueError("String ending with %r can't be PCKS7-padded" % s[-1])
+        return s[:-numpads]
+    """
+    def _generateRandomKey(keysize):
+        '''
+        Generates a key from random data of length `keysize`
+        The returned key is a string of bytes
+        '''
+        if keysize not in (16, 24, 32):
+            emsg = 'Invalid keysize, %s. Should be one of (16, 24, 32).'
+            #raise ValueError, emsg % keysize
+        return os.urandom(keysize)
+
+
+class AES(object):
+
+    # valid key size dictionary
     keySize = dict(SIZE_128=16, SIZE_192=24, SIZE_256=32)
 
     sbox = [
@@ -155,52 +225,27 @@ class PureAESCipher(AlgorithmInterface):
         0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d
     ]
 
-    def __init__(self, arguments):
-        ''' 
-        # if they pass a k parameter, use as the password
-        password = ArgParcer.getValue(arguments, '-k')
-        while password == '':
-            password = input('AES needs a passkey: ')
-        # this is not actually going to be used as the passkey for AES
-        # we are going to create a 256bit key from the given secret password
-        h = hashlib.sha256()
-        h.update(bytes(password, 'utf-8'))
-        self.key = h.digest()
-        '''
-
-    def encryptString(self, unencryptedMessage):
-        ''' 
-        test of block encryption
-        '''
-        #key = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84,143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
-        #size = 32
-        #block = [65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]
-        return bytes(unencryptedMessage, 'utf-8')
-
-
-    def decryptString(self, encryptedMessage):
-        ''' 
-        test of block decryption
-        '''
-        #key = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84,143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
-        #size = 32
-        #block = [65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]
-        return str(encryptedMessage)
-
     def _getSBoxValue(self,num):
-        '''Retrieves a given S-Box Value'''
+        '''
+        Retrieves a given S-Box Value
+        '''
         return self.sbox[num]
 
     def _getSBoxInvert(self,num):
-        '''Retrieves a given Inverted S-Box Value'''
+        '''
+        Retrieves a given Inverted S-Box Value
+        '''
         return self.sboxInv[num]
 
     def _getrconValue(self, num):
-        '''Retrieves a given rcon Value'''
+        '''
+        Retrieves a given rcon Value
+        '''
         return self.rcon[num]
 
     def _rotate(self, word):
-        ''' Rijndael's key schedule rotate operation.
+        '''
+        Rijndael's key schedule rotate operation.
 
         Rotate a word eight bits to the left: eg, rotate(1d2c3a4f) == 2c3a4f1d
         Word is an char list of size 4 (32 bits overall).
@@ -208,7 +253,9 @@ class PureAESCipher(AlgorithmInterface):
         return word[1:] + word[:1]
 
     def _core(self, word, iteration):
-        '''Key schedule core.'''
+        '''
+        Key schedule core
+        '''
         # rotate the 32-bit word 8 bits to the left
         word = self._rotate(word)
         # apply S-Box substitution on all 4 parts of the 32-bit word
@@ -220,7 +267,8 @@ class PureAESCipher(AlgorithmInterface):
         return word
 
     def _expandKey(self, key, size, expandedKeySize):
-        '''Rijndael's key expansion.
+        '''
+        Rijndael's key expansion
 
         Expands an 128,192,256 key into an 176,208,240 bytes key
 
@@ -260,14 +308,17 @@ class PureAESCipher(AlgorithmInterface):
 
         return expandedKey
 
-    def addRoundKey(self, state, roundKey):
-        '''Adds (XORs) the round key to the state.'''
+    def _addRoundKey(self, state, roundKey):
+        '''
+        Adds (XORs) the round key to the state
+        '''
         for i in range(16):
             state[i] ^= roundKey[i]
         return state
 
-    def createRoundKey(self, expandedKey, roundKeyPointer):
-        '''Create a round key.
+    def _createRoundKey(self, expandedKey, roundKeyPointer):
+        '''
+        Create a round key.
         Creates a round key from the given expanded key and the
         position within the expanded key.
         '''
@@ -277,8 +328,10 @@ class PureAESCipher(AlgorithmInterface):
                 roundKey[j*4+i] = expandedKey[roundKeyPointer + i*4 + j]
         return roundKey
 
-    def galois_multiplication(self, a, b):
-        '''Galois multiplication of 8 bit characters a and b.'''
+    def _galoisMul(self, a, b):
+        '''
+        Galois multiplication of 8 bit characters a and b
+        '''
         p = 0
         for counter in range(8):
             if b & 1: p ^= a
@@ -291,24 +344,28 @@ class PureAESCipher(AlgorithmInterface):
             b >>= 1
         return p
 
-    #
-    # substitute all the values from the state with the value in the SBox
-    # using the state value as index for the SBox
-    #
-    def subBytes(self, state, isInv):
+    def _subBytes(self, state, isInv):
+        '''
+        substitute all the values from the state with the value in the SBox
+        using the state value as index for the SBox
+        '''
         if isInv: getter = self._getSBoxInvert
         else: getter = self._getSBoxValue
         for i in range(16): state[i] = getter(state[i])
         return state
 
-    # iterate over the 4 rows and call shiftRow() with that row
-    def shiftRows(self, state, isInv):
+    def _shiftRows(self, state, isInv):
+        '''
+        iterate over the 4 rows and call _shiftRow() with that row
+        '''
         for i in range(4):
-            state = self.shiftRow(state, i*4, i, isInv)
+            state = self._shiftRow(state, i*4, i, isInv)
         return state
 
-    # each iteration shifts the row to the left by 1
-    def shiftRow(self, state, statePointer, nbr, isInv):
+    def _shiftRow(self, state, statePointer, nbr, isInv):
+        '''
+        each iteration shifts the row to the left by 1
+        '''
         for i in range(nbr):
             if isInv:
                 state[statePointer:statePointer+4] = \
@@ -320,25 +377,29 @@ class PureAESCipher(AlgorithmInterface):
                         state[statePointer:statePointer+1]
         return state
 
-    # galois multiplication of the 4x4 matrix
-    def mixColumns(self, state, isInv):
+    def _mixColumns(self, state, isInv):
+        '''
+        galois multiplication of the 4x4 matrix
+        '''
         # iterate over the 4 columns
         for i in range(4):
             # construct one column by slicing over the 4 rows
             column = state[i:i+16:4]
-            # apply the mixColumn on one column
-            column = self.mixColumn(column, isInv)
+            # apply the _mixColumn on one column
+            column = self._mixColumn(column, isInv)
             # put the values back into the state
             state[i:i+16:4] = column
 
         return state
 
-    # galois multiplication of 1 column of the 4x4 matrix
-    def mixColumn(self, column, isInv):
+    def _mixColumn(self, column, isInv):
+        '''
+        galois multiplication of 1 column of the 4x4 matrix
+        '''
         if isInv: mult = [14, 9, 13, 11]
         else: mult = [2, 1, 1, 3]
         cpy = list(column)
-        g = self.galois_multiplication
+        g = self._galoisMul
 
         column[0] = g(cpy[0], mult[0]) ^ g(cpy[3], mult[1]) ^ g(cpy[2], mult[2]) ^ g(cpy[1], mult[3])
         column[1] = g(cpy[1], mult[0]) ^ g(cpy[0], mult[1]) ^ g(cpy[3], mult[2]) ^ g(cpy[2], mult[3])
@@ -346,50 +407,60 @@ class PureAESCipher(AlgorithmInterface):
         column[3] = g(cpy[3], mult[0]) ^ g(cpy[2], mult[1]) ^ g(cpy[1], mult[2]) ^ g(cpy[0], mult[3])
         return column
 
-    # applies the 4 operations of the forward round in sequence
-    def aes_round(self, state, roundKey):
-        state = self.subBytes(state, False)
-        state = self.shiftRows(state, False)
-        state = self.mixColumns(state, False)
-        state = self.addRoundKey(state, roundKey)
+    def _aesRound(self, state, roundKey):
+        '''
+        applies the 4 operations of the forward round in sequence
+        '''
+        state = self._subBytes(state, False)
+        state = self._shiftRows(state, False)
+        state = self._mixColumns(state, False)
+        state = self._addRoundKey(state, roundKey)
         return state
 
-    # applies the 4 operations of the inverse round in sequence
-    def aes_invRound(self, state, roundKey):
-        state = self.shiftRows(state, True)
-        state = self.subBytes(state, True)
-        state = self.addRoundKey(state, roundKey)
-        state = self.mixColumns(state, True)
+    def _aesRoundInv(self, state, roundKey):
+        '''
+        applies the 4 operations of the inverse round in sequence
+        '''
+        state = self._shiftRows(state, True)
+        state = self._subBytes(state, True)
+        state = self._addRoundKey(state, roundKey)
+        state = self._mixColumns(state, True)
         return state
 
-    # Perform the initial operations, the standard round, and the final
-    # operations of the forward aes, creating a round key for each round
-    def aes_main(self, state, expandedKey, nbrRounds):
-        state = self.addRoundKey(state, self.createRoundKey(expandedKey, 0))
+    def _aesMain(self, state, expandedKey, nbrRounds):
+        '''
+        Perform the initial operations, the standard round, and the final
+        operations of the forward aes, creating a round key for each round
+        '''
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 0))
         i = 1
         while i < nbrRounds:
-            state = self.aes_round(state, self.createRoundKey(expandedKey, 16*i))
+            state = self._aesRound(state, self._createRoundKey(expandedKey, 16*i))
             i += 1
-        state = self.subBytes(state, False)
-        state = self.shiftRows(state, False)
-        state = self.addRoundKey(state, self.createRoundKey(expandedKey, 16*nbrRounds))
+        state = self._subBytes(state, False)
+        state = self._shiftRows(state, False)
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 16*nbrRounds))
         return state
 
-    # Perform the initial operations, the standard round, and the final
-    # operations of the inverse aes, creating a round key for each round
-    def aes_invMain(self, state, expandedKey, nbrRounds):
-        state = self.addRoundKey(state, self.createRoundKey(expandedKey, 16*nbrRounds))
+    def _aesMainInv(self, state, expandedKey, nbrRounds):
+        '''
+        Perform the initial operations, the standard round, and the final
+        operations of the inverse aes, creating a round key for each round
+        '''
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 16*nbrRounds))
         i = nbrRounds - 1
         while i > 0:
-            state = self.aes_invRound(state, self.createRoundKey(expandedKey, 16*i))
+            state = self._aesRoundInv(state, self._createRoundKey(expandedKey, 16*i))
             i -= 1
-        state = self.shiftRows(state, True)
-        state = self.subBytes(state, True)
-        state = self.addRoundKey(state, self.createRoundKey(expandedKey, 0))
+        state = self._shiftRows(state, True)
+        state = self._subBytes(state, True)
+        state = self._addRoundKey(state, self._createRoundKey(expandedKey, 0))
         return state
 
-    # encrypts a 128 bit input block against the given key of size specified
-    def encryptBlock(self, iput, key, size):
+    def _encryptBlock(self, iput, key, size):
+        '''
+        encrypts a 128 bit input block against the given key of size specified
+        '''
         output = [0] * 16
         # the number of rounds
         nbrRounds = 0
@@ -422,7 +493,7 @@ class PureAESCipher(AlgorithmInterface):
         expandedKey = self._expandKey(key, size, expandedKeySize)
 
         # encrypt the block using the expandedKey
-        block = self.aes_main(block, expandedKey, nbrRounds)
+        block = self._aesMain(block, expandedKey, nbrRounds)
 
         # unmap the block again into the output
         for k in range(4):
@@ -431,8 +502,10 @@ class PureAESCipher(AlgorithmInterface):
                 output[(k*4)+l] = block[(k+(l*4))]
         return output
 
-    # decrypts a 128 bit input block against the given key of size specified
-    def decryptBlock(self, iput, key, size):
+    def _decryptBlock(self, iput, key, size):
+        '''
+        decrypts a 128 bit input block against the given key of size specified
+        '''
         output = [0] * 16
         # the number of rounds
         nbrRounds = 0
@@ -462,7 +535,7 @@ class PureAESCipher(AlgorithmInterface):
         # expand the key into an 176, 208, 240 bytes key
         expandedKey = self._expandKey(key, size, expandedKeySize)
         # decrypt the block using the expandedKey
-        block = self.aes_invMain(block, expandedKey, nbrRounds)
+        block = self._aesMainInv(block, expandedKey, nbrRounds)
         # unmap the block again into the output
         for k in range(4):
             # iterate over the rows
@@ -471,12 +544,9 @@ class PureAESCipher(AlgorithmInterface):
         return output
 
 
-#####
-# FOR TESTING OF BLOCK LEVEL ENCRYPTION/DECRYPTION
-#####
 class AESModeOfOperation(object):
 
-    aes = PureAESCipher(object)
+    aes = AES()
 
     # structure of supported modes of operation
     modeOfOperation = dict(OFB=0, CFB=1, CBC=2)
@@ -495,6 +565,9 @@ class AESModeOfOperation(object):
             ar[j] = ord(string[i])
             j += 1
             i += 1
+
+        print('convert string: ', ar)
+
         return ar
 
     # Mode of Operation Encryption
@@ -524,13 +597,12 @@ class AESModeOfOperation(object):
                 if  end > len(stringIn):
                     end = len(stringIn)
                 plaintext = self.convertString(stringIn, start, end, mode)
-                # print 'PT@%s:%s' % (j, plaintext)
                 if mode == self.modeOfOperation["CFB"]:
                     if firstRound:
-                        output = self.aes.encryptBlock(IV, key, size)
+                        output = self.aes._encryptBlock(IV, key, size)
                         firstRound = False
                     else:
-                        output = self.aes.encryptBlock(iput, key, size)
+                        output = self.aes._encryptBlock(iput, key, size)
                     for i in range(16):
                         if len(plaintext)-1 < i:
                             ciphertext[i] = 0 ^ output[i]
@@ -545,10 +617,10 @@ class AESModeOfOperation(object):
                     iput = ciphertext
                 elif mode == self.modeOfOperation["OFB"]:
                     if firstRound:
-                        output = self.aes.encryptBlock(IV, key, size)
+                        output = self.aes._encryptBlock(IV, key, size)
                         firstRound = False
                     else:
-                        output = self.aes.encryptBlock(iput, key, size)
+                        output = self.aes._encryptBlock(iput, key, size)
                     for i in range(16):
                         if len(plaintext)-1 < i:
                             ciphertext[i] = 0 ^ output[i]
@@ -567,9 +639,8 @@ class AESModeOfOperation(object):
                             iput[i] =  plaintext[i] ^ IV[i]
                         else:
                             iput[i] =  plaintext[i] ^ ciphertext[i]
-                    # print 'IP@%s:%s' % (j, iput)
                     firstRound = False
-                    ciphertext = self.aes.encryptBlock(iput, key, size)
+                    ciphertext = self.aes._encryptBlock(iput, key, size)
                     # always 16 bytes because of the padding for CBC
                     for k in range(16):
                         cipherOut.append(ciphertext[k])
@@ -606,10 +677,10 @@ class AESModeOfOperation(object):
                 ciphertext = cipherIn[start:end]
                 if mode == self.modeOfOperation["CFB"]:
                     if firstRound:
-                        output = self.aes.encryptBlock(IV, key, size)
+                        output = self.aes._encryptBlock(IV, key, size)
                         firstRound = False
                     else:
-                        output = self.aes.encryptBlock(iput, key, size)
+                        output = self.aes._encryptBlock(iput, key, size)
                     for i in range(16):
                         if len(output)-1 < i:
                             plaintext[i] = 0 ^ ciphertext[i]
@@ -624,10 +695,10 @@ class AESModeOfOperation(object):
                     iput = ciphertext
                 elif mode == self.modeOfOperation["OFB"]:
                     if firstRound:
-                        output = self.aes.encryptBlock(IV, key, size)
+                        output = self.aes._encryptBlock(IV, key, size)
                         firstRound = False
                     else:
-                        output = self.aes.encryptBlock(iput, key, size)
+                        output = self.aes._encryptBlock(iput, key, size)
                     for i in range(16):
                         if len(output)-1 < i:
                             plaintext[i] = 0 ^ ciphertext[i]
@@ -641,7 +712,7 @@ class AESModeOfOperation(object):
                         stringOut += chr(plaintext[k])
                     iput = output
                 elif mode == self.modeOfOperation["CBC"]:
-                    output = self.aes.decryptBlock(ciphertext, key, size)
+                    output = self.aes._decryptBlock(ciphertext, key, size)
                     for i in range(16):
                         if firstRound:
                             plaintext[i] = IV[i] ^ output[i]
@@ -657,21 +728,18 @@ class AESModeOfOperation(object):
                     iput = ciphertext
         return stringOut
 
-
+"""
 def encryptData(key, data, mode=AESModeOfOperation.modeOfOperation["CBC"]):
-    '''encrypt `data` using `key`
-
-    `key` should be a string of bytes.
-
-    returned cipher is a string of bytes prepended with the initialization
-    vector.
-
+    '''
+    encrypt `data` using `key`
+    `key` should be a string of bytes
+    returned cipher is a string of bytes prepended with the initialization vector
     '''
     key = map(ord, key)
     if mode == AESModeOfOperation.modeOfOperation["CBC"]:
         data = pad(data)
     keysize = len(key)
-    assert keysize in PureAESCipher.keySize.values(), 'invalid key size: %s' % keysize
+    assert keysize in AES.keySize.values(), 'invalid key size: %s' % keysize
     # create a new iv using random data
     iv = [ord(i) for i in os.urandom(16)]
     moo = AESModeOfOperation()
@@ -682,18 +750,14 @@ def encryptData(key, data, mode=AESModeOfOperation.modeOfOperation["CBC"]):
     return ''.join(map(chr, iv)) + ''.join(map(chr, ciph))
 
 def decryptData(key, data, mode=AESModeOfOperation.modeOfOperation["CBC"]):
-    '''decrypt `data` using `key`
-
-    `key` should be a string of bytes.
-
-    `data` should have the initialization vector prepended as a string of
-    ordinal values.
-
     '''
-
+    decrypt `data` using `key`
+    `key` should be a string of bytes
+    `data` should have the initialization vector prepended as a string of ordinal values
+    '''
     key = map(ord, key)
     keysize = len(key)
-    assert keysize in PureAESCipher.keySize.values(), 'invalid key size: %s' % keysize
+    assert keysize in AES.keySize.values(), 'invalid key size: %s' % keysize
     # iv is first 16 bytes
     iv = map(ord, data[:16])
     data = map(ord, data[16:])
@@ -703,25 +767,4 @@ def decryptData(key, data, mode=AESModeOfOperation.modeOfOperation["CBC"]):
         decr = unpad(decr)
     return decr
 
-def generateRandomKey(keysize):
-    '''Generates a key from random data of length `keysize`.
-    
-    The returned key is a string of bytes.
-    
-    '''
-    if keysize not in (16, 24, 32):
-        emsg = 'Invalid keysize, %s. Should be one of (16, 24, 32).'
-        #raise ValueError, emsg % keysize
-    return os.urandom(keysize)
-
-if __name__ == "__main__":
-    moo = AESModeOfOperation()
-    cleartext = "This is a test!"
-    cypherkey = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
-    iv = [103,35,148,239,76,213,47,118,255,222,123,176,106,134,98,92]
-    mode, orig_len, ciph = moo.encrypt(cleartext, moo.modeOfOperation["CBC"],
-            cypherkey, moo.aes.keySize["SIZE_128"], iv)
-    print('m=%s, ol=%s (%s), ciph=%s' % (mode, orig_len, len(cleartext), ciph))
-    decr = moo.decrypt(ciph, orig_len, mode, cypherkey,
-            moo.aes.keySize["SIZE_128"], iv)
-    print(decr)
+"""
