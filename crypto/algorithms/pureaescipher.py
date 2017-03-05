@@ -95,64 +95,39 @@ class PureAESCipher(AlgorithmInterface):
         h.update(bytes(password, 'utf-8'))
         self.key = h.digest()
         '''
-        self.cypherkey = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
+        self.cypherkey = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]
         self.iv = [103,35,148,239,76,213,47,118,255,222,123,176,106,134,98,92]
         self.moo = AESModeOfOperation()
+        self.mode = self.moo.modeOfOperation["CBC"]
+        self.keysize = self.moo.aes.keySize["SIZE_256"]
 
     def encryptString(self, unencryptedMessage):
         ''' 
-        test of block encryption
+        comment
         '''
-        #key = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84,143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
-        #size = 32
-        #block = [65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]
 
-        self.mode, self.orig_len, self.ciph = self.moo.encrypt(unencryptedMessage, 
-                                                               self.moo.modeOfOperation["CBC"], 
-                                                               self.cypherkey, 
-                                                               self.moo.aes.keySize["SIZE_128"], 
-                                                               self.iv)
-        print('Message length: ', self.orig_len)
-        print('Cipher length: ', len(self.ciph))
+        self.ciph = self.moo.encrypt(unencryptedMessage, 
+                                     self.mode, 
+                                     self.cypherkey, 
+                                     self.keysize, 
+                                     self.iv)
 
         return bytes(self.ciph)
 
     def decryptString(self, encryptedMessage):
         ''' 
-        test of block decryption
+        comment
         '''
-        #key = [143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84,143,194,34,208,145,203,230,143,177,246,97,206,145,92,255,84]
-        #size = 32
-        #block = [65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]
 
-        self.decr = self.moo.decrypt(encryptedMessage, 
-                                     self.orig_len, 
+        self.decr = self.moo.decrypt(encryptedMessage,  
                                      self.mode, 
                                      self.cypherkey, 
-                                     self.moo.aes.keySize["SIZE_128"], 
+                                     self.keysize, 
                                      self.iv)
 
         return self.decr
-    """
-    def _pad(s):
-        '''
-        return s padded to a multiple of 16-bytes by PKCS7 padding
-        '''
-        numpads = 16 - (len(s)%16)
-        return s + numpads*chr(numpads)
-
-    def _unpad(s):
-        '''
-        return s stripped of PKCS7 padding
-        '''
-        if len(s)%16 or not s:
-            raise ValueError("String of len %d can't be PCKS7-padded" % len(s))
-        numpads = ord(s[-1])
-        if numpads > 16:
-            raise ValueError("String ending with %r can't be PCKS7-padded" % s[-1])
-        return s[:-numpads]
-    """
-    def _generateRandomKey(keysize):
+    
+    def _generateRandomKey(self, keysize):
         '''
         Generates a key from random data of length `keysize`
         The returned key is a string of bytes
@@ -225,13 +200,31 @@ class AES(object):
         0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d
     ]
 
-    def _getSBoxValue(self,num):
+    def _pad(self, s):
+        '''
+        return s padded to a multiple of 16-bytes by PKCS7 padding
+        '''
+        numpads = 16 - (len(s)%16)
+        return s + numpads*chr(numpads)
+
+    def _unpad(self, s):
+        '''
+        return s stripped of PKCS7 padding
+        '''
+        if len(s)%16 or not s:
+            raise ValueError("String of len %d can't be PCKS7-padded" % len(s))
+        numpads = ord(s[-1])
+        if numpads > 16:
+            raise ValueError("String ending with %r can't be PCKS7-padded" % s[-1])
+        return s[:-numpads]
+
+    def _getSBoxValue(self, num):
         '''
         Retrieves a given S-Box Value
         '''
         return self.sbox[num]
 
-    def _getSBoxInvert(self,num):
+    def _getSBoxInvert(self, num):
         '''
         Retrieves a given Inverted S-Box Value
         '''
@@ -566,8 +559,6 @@ class AESModeOfOperation(object):
             j += 1
             i += 1
 
-        print('convert string: ', ar)
-
         return ar
 
     # Mode of Operation Encryption
@@ -644,16 +635,15 @@ class AESModeOfOperation(object):
                     # always 16 bytes because of the padding for CBC
                     for k in range(16):
                         cipherOut.append(ciphertext[k])
-        return mode, len(stringIn), cipherOut
+        return cipherOut
 
     # Mode of Operation Decryption
     # cipherIn - Encrypted String
-    # originalsize - The unencrypted string length - required for CBC
     # mode - mode of type modeOfOperation
     # key - a number array of the bit length size
     # size - the bit length of the key
     # IV - the 128 bit number array Initilization Vector
-    def decrypt(self, cipherIn, originalsize, mode, key, size, IV):
+    def decrypt(self, cipherIn, mode, key, size, IV):
         # cipherIn = unescCtrlChars(cipherIn)
         if len(key) % size:
             return None
@@ -719,52 +709,7 @@ class AESModeOfOperation(object):
                         else:
                             plaintext[i] = iput[i] ^ output[i]
                     firstRound = False
-                    if originalsize is not None and originalsize < end:
-                        for k in range(originalsize-start):
-                            stringOut += chr(plaintext[k])
-                    else:
-                        for k in range(end-start):
-                            stringOut += chr(plaintext[k])
+                    for k in range(end-start):
+                        stringOut += chr(plaintext[k])
                     iput = ciphertext
         return stringOut
-
-"""
-def encryptData(key, data, mode=AESModeOfOperation.modeOfOperation["CBC"]):
-    '''
-    encrypt `data` using `key`
-    `key` should be a string of bytes
-    returned cipher is a string of bytes prepended with the initialization vector
-    '''
-    key = map(ord, key)
-    if mode == AESModeOfOperation.modeOfOperation["CBC"]:
-        data = pad(data)
-    keysize = len(key)
-    assert keysize in AES.keySize.values(), 'invalid key size: %s' % keysize
-    # create a new iv using random data
-    iv = [ord(i) for i in os.urandom(16)]
-    moo = AESModeOfOperation()
-    (mode, length, ciph) = moo.encrypt(data, mode, key, keysize, iv)
-    # With padding, the original length does not need to be known. It's a bad
-    # idea to store the original message length.
-    # prepend the iv.
-    return ''.join(map(chr, iv)) + ''.join(map(chr, ciph))
-
-def decryptData(key, data, mode=AESModeOfOperation.modeOfOperation["CBC"]):
-    '''
-    decrypt `data` using `key`
-    `key` should be a string of bytes
-    `data` should have the initialization vector prepended as a string of ordinal values
-    '''
-    key = map(ord, key)
-    keysize = len(key)
-    assert keysize in AES.keySize.values(), 'invalid key size: %s' % keysize
-    # iv is first 16 bytes
-    iv = map(ord, data[:16])
-    data = map(ord, data[16:])
-    moo = AESModeOfOperation()
-    decr = moo.decrypt(data, None, mode, key, keysize, iv)
-    if mode == AESModeOfOperation.modeOfOperation["CBC"]:
-        decr = unpad(decr)
-    return decr
-
-"""
