@@ -27,6 +27,8 @@ the CaesarCipher has additional optional parameters. Since we did not use them, 
 on these optional parameters to this example, see the `CaesarCipher` section in the `Available Encryption/Decryption Algorithms` 
 section of the readme.
 
+For full documentation see [https://pychat.readthedocs.io](htpps://pychat.readthedocs.io)
+
 
 # Developer Notes
 _Apr 28/2016_ - Three new ciphers have been added! Second Release is coming!
