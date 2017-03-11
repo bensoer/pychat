@@ -1,3 +1,5 @@
+.. _installation_reference_label:
+
 ============
 Installation
 ============
@@ -32,5 +34,4 @@ on these optional parameters to this example, see the `CaesarCipher` section in 
 section of the readme.
 
 See the `Parameters` section for all common valid parameters
-
 

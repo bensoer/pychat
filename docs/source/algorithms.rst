@@ -1,3 +1,5 @@
+.. _algorithms_reference_label:
+
 ==========
 Algorithms
 ==========
@@ -62,6 +64,38 @@ Set the key value to 'spaghetti'
 
    python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a TranspositionCipher -k spaghetti
 
+VigenereCipher
+==============
+Parameters listed below are **required**
+
++-----------+-------------------------------------------------------------------------------------------------------+
+| Parameter | Description                                                                                           |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -k        || Set the key word used for encryption                                                                 |
++-----------+-------------------------------------------------------------------------------------------------------+
+
+Example
+-------
+.. code-block:: bash
+
+   python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a VigenerCipher -k spaghetti
+
+BeaufortCipher
+==============
+Parameters listed below are **required**
+
++-----------+-------------------------------------------------------------------------------------------------------+
+| Parameter | Description                                                                                           |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -k        || Set the key word used for encryption                                                                 |
++-----------+-------------------------------------------------------------------------------------------------------+
+
+Example
+-------
+.. code-block:: bash
+
+   python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a BeaufortCipher -k spaghetti
+
 AESCipher
 =========
 Parameters listed below are **required**
@@ -83,6 +117,30 @@ Set the key password to 'spaghetti'
 
    python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a AESCipher -k spaghetti
 
+PureAESCipher
+=============
+PureAESCipher differs from AESCipher in being a pure implementation written by Kurtis Bohlen. Use of the `pycrypto`
+library is not incorporated in this implementation
+
+Parameters listed below are **required**
+
++-----------+-------------------------------------------------------------------------------------------------------+
+| Parameter | Description                                                                                           |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -k        || Set the key for encryption (must be 16,24, or 32 bytes long)                                         |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -m        || Set the block cipher mode of operation (default is CBC)                                              |
++-----------+-------------------------------------------------------------------------------------------------------+
+
+Example
+-------
+Set the key to 'asixteenbyteword` and the mode to 'CBC' (default mode)
+
+.. code-block:: bash
+
+   python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a PureAESCipher -k asixteenbyteword -m CBC
+
+
 DESCipher
 =========
 Parameters listed below are **required**
@@ -101,3 +159,27 @@ Set the key password to 'spaghetti'
 .. code-block:: bash
 
    python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a DESCipher -k spaghetti
+
+PureRSA
+=======
+PureRSA differs from a normal RSA implementation as it is a pure implementation written by Ben Soer. The `pycrypto`
+library is not incorporated in the implementation of this algorithm
+
+Parameters listed below are **required**
+
++-----------+-------------------------------------------------------------------------------------------------------+
+| Parameter | Description                                                                                           |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -p1       || Set first prime number for generating the public/private key pair                                    |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -p2       || Set second prime number for generating the public/private key pair                                   |
++-----------+-------------------------------------------------------------------------------------------------------+
+
+Example
+-------
+Set the prime numbers to 5 and 11
+
+.. code-block:: bash
+
+   python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a PureRSA -p1 5 -p2 11
+
