@@ -3,3 +3,8 @@
 *.pyc
 *.py~
 *.py.save
+*.log
+
+/docs/build
+_static
+_templates

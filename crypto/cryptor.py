@@ -2,6 +2,9 @@ __author__ = 'bensoer'
 
 import types
 from crypto.algorithms.algorithminterface import AlgorithmInterface
+import logging
+import binascii
+logger = logging.getLogger('pychat')
 
 '''
 Cryptor is a Base class defining functionality for a Cryptographic class. This includes functionality for setting and
@@ -14,6 +17,10 @@ class Cryptor:
     _strPackage = ""
     _strAlgorithm = ""
     _loadedAlgorithm = None
+
+    _strHashPackage = ""
+    _strHash = ""
+    _loadedHash = None
 
 
     '''
@@ -38,6 +45,12 @@ class Cryptor:
     def setAlgorithm(self, strAlgorithm):
         self._strAlgorithm = strAlgorithm
         self._strPackage = strAlgorithm.lower()
+        logger.debug("Set Algorithm. Algorithm Name: " + strAlgorithm + " Package Name: " + strAlgorithm.lower())
+
+    def setHash(self, strHash):
+        self._strHash = strHash
+        self._strHashPackage = strHash.lower()
+        logger.debug("Set Hash. Hash Name: " + strHash + " Package Name: " + strHash.lower())
 
     '''
     testAlgorithm tests the strAlgorithm string value as to whether it will dynamicaly load a class or not. The tester
@@ -46,6 +59,8 @@ class Cryptor:
     failure this test will fail and throw an error from the dynamic loading functions of at what point failed
     '''
     def testAlgorithm(self):
+        logger.debug("Testing Of Algorithms Has Been Deprecated")
+        '''
         print(" -- Testing Algorithm Parameter -- ")
         try:
             pkg = __import__('crypto.algorithms.' + self._strPackage, fromlist=[self._strAlgorithm])
@@ -64,7 +79,7 @@ class Cryptor:
             if isinstance(encResponse, bytes):
                 print("> Test Encryption Successful")
             else:
-                print("> Test Encryption Failed. A String Type Was Not Returned")
+                print("> Test Encryption Failed. A Bytes Type Was Not Returned")
                 print("> Type Is: %s" % type(encResponse))
                 return False
             decResponse = algorithm.decryptString(encResponse)
@@ -84,30 +99,85 @@ class Cryptor:
             raise error
         finally:
             print(" -- Testing Algorithm Parameter Complete -- ")
+        '''
+        return True
 
 
 
     def loadAlgorithm(self):
         print(" -- Loading Algorithm Into System -- ")
+        logger.debug("Now Attempting To Dynamically Load Algorithm")
         pkg = __import__('crypto.algorithms.' + self._strPackage, fromlist=[self._strAlgorithm])
+        logger.debug("Package Import Successful. Now Attempting Class")
         mod = getattr(pkg, self._strAlgorithm)
+        logger.debug("Class Import Successful. Loading Into Attributes")
         self._loadedAlgorithm = mod(self._arguments)
 
+    def loadHash(self):
+        print(" -- Loading Hash Into System -- ")
+        logger.debug("Now Attempting To Dynamically Load Hash")
+        pkg = __import__('crypto.hashes.' + self._strHashPackage, fromlist=[self._strHash])
+        logger.debug("Hash Package Import Successful. Now Attempting Class")
+        mod = getattr(pkg, self._strHash)
+        logger.debug("Hash Class Import Successful. Loading Into Attributes")
+        self._loadedHash = mod()
+
     def setArguments(self, arguments):
+        logger.debug("Setting System Arguments As Attribute")
         self._arguments = arguments
 
     # -- Encryption Methods --
     # encrypt will take the message that arrives as a string and then return them as bytes
     def encrypt(self, message):
-        return self._loadedAlgorithm.encryptString(message)
+        if self._loadedHash is not None:
+            logger.debug("Hash Has Been Loaded For Client. Generating Hash First")
+            hashBytes = self._loadedHash.hashString(message)
+            logger.debug("Passing Message To Loaded Algorithm To Encrypt")
+            encryptedBytes = self._loadedAlgorithm.encryptString(message)
+            fullMessage = bytearray()
+            for byte in hashBytes:
+                fullMessage.append(byte)
+            for byte in encryptedBytes:
+                fullMessage.append(byte)
+            return fullMessage
+        else:
+            logger.debug("Passing Message To Loaded Algorithm To Encrypt")
+            return self._loadedAlgorithm.encryptString(message)
+
 
     def getInitializationMessage(self):
+        logger.debug("Retrieving First Message to Send")
         return self._loadedAlgorithm.sendFirstMessage()
+
+    def getHashOfMessage(self, message):
+        logger.debug("Generating Hash For Message")
+        return self._loadedHash.hashString(message)
 
     # -- Decryption Methods --
     # decrypt will take a message that is in bytes and then return them as a string
     def decrypt(self, message):
-        return self._loadedAlgorithm.decryptString(message)
+        if self._loadedHash is not None:
+
+            logger.debug("Hash Has Been Loaded For Client. Parsing Hash")
+            hashBytesLength = self._loadedHash.getDigestSize()
+            hashBytes = message[0:hashBytesLength]
+            messageBytes = message[hashBytesLength:]
+            logger.debug("Passing Message To Loaded Algorithm To Decrypt")
+            plaintextMessage = self._loadedAlgorithm.decryptString(messageBytes)
+
+            if not self._loadedHash.isValidHash(plaintextMessage, hashBytes):
+                print("WARNING: Hash Verification Failed For The Following Message")
+                print("Sent Hash: " + str(binascii.hexlify(hashBytes)))
+                print("Generated Hash: " + str(binascii.hexlify(self._loadedHash.hashString(plaintextMessage))))
+
+            return plaintextMessage
+        else:
+            logger.debug("Passing Message To Loaded Algorithm To Decrypt")
+            return self._loadedAlgorithm.decryptString(message)
 
     def giveFirstMessage(self, firstMessage):
+        logger.debug("Passing First Received Message To The Algorithm")
         return self._loadedAlgorithm.receiveFirstMessage(firstMessage)
+
+    def getDigestSize(self, message):
+        logger.debug("Fetching Digest Length For Hash")
