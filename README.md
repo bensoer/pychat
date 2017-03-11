@@ -26,5 +26,5 @@ Since we did not use them, default CaesarCipher setings were used.
 For full documentation see [https://pychat.readthedocs.io](htpps://pychat.readthedocs.io)
 
 # Developer Notes
-_Apr 28/2016_ - Three new ciphers have been added! Second Release is coming!
+_Apr 28/2016_ - Three new ciphers have been added! Second Release is coming! <br>
 _March 10/2017_ - Pure AES, RSA algorithms along with added Hashing functionality
