@@ -4,10 +4,11 @@ from crypto.algorithms.algorithminterface import AlgorithmInterface
 
 from Crypto.Cipher import DES3
 from Crypto import Random
+from Crypto.Hash import SHA256
 
 from tools.argparcer import ArgParcer
 
-'''
+''' 
 Description of DES3Cipher
 
 BLOCK_SIZE:
@@ -63,22 +64,35 @@ that OpenVPN uses.
 class DES3Cipher(AlgorithmInterface):
     
     def __init__(self, arguments):
-        # if they pass a k parameter, use as the password
-        key = ArgParcer.getValue(arguments, "-k")
-        while key == "":
-            key = input("DES3 needs a 16 char long key: ")
-        self.key = bytes(key, 'utf-8')
+        ''' 
+        set up the cipher object
+        if they pass a k parameter, use as the password
+        use SHA265 to hash their password into a 21 byte key
+        '''
+        password = ArgParcer.getValue(arguments, "-k")
+        while password == "":
+            password = input("DES3 needs a key: ")
+        h = SHA256.new()
+        h.update(bytes(password, 'utf-8'))
+        hash = h.hexdigest()
+        self.key = hash[:24]
 
     def _pad(self, s):
+        ''' 
+        return s padded to a multiple of 8-bytes following PCKS7 padding
+        '''
         return s + (DES3.block_size - len(s) % DES3.block_size) * str(chr(DES3.block_size - len(s) % DES3.block_size))
 
     def _unpad(self, s):
+        ''' 
+        return s stripped of PKCS7 padding
+        '''
         return s[:-ord(s[len(s)-1:])]
 
     def encryptString(self, unencryptedMessage):
-        #'''
-        #this is a comment
-        #'''
+        ''' 
+        this is a comment
+        '''
         paddedMessage = self._pad(unencryptedMessage)
         iv = Random.new().read(DES3.block_size)
         cipher = DES3.new(self.key, DES3.MODE_CBC, iv)
@@ -86,9 +100,9 @@ class DES3Cipher(AlgorithmInterface):
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
-        #'''
-        #The IV is the first block
-        #'''
+        ''' 
+        the IV is the first block
+        '''
         iv = encryptedMessage[:DES3.block_size]
         cipher = DES3.new(self.key, DES3.MODE_CBC, iv)
         decryptedMessage = cipher.decrypt(encryptedMessage[DES3.block_size:])
