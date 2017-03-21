@@ -1,5 +1,11 @@
+__author__ = 'bensoer'
+
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 from tools.argparcer import ArgParcer
+
+'''
+http://www.cryptool-online.org/index.php?option=com_content&view=article&id=120&Itemid=143&lang=en
+'''
 
 class GronsfeldCipher(AlgorithmInterface):
 

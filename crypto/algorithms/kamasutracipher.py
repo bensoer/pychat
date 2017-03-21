@@ -1,5 +1,11 @@
+__author__ = 'bensoer'
+
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 from tools.argparcer import ArgParcer
+
+'''
+http://www.cryptool-online.org/index.php?option=com_content&view=article&id=148&Itemid=386&lang=en
+'''
 
 class KamasutraCipher(AlgorithmInterface):
 
