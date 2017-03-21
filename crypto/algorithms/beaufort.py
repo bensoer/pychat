@@ -1,3 +1,5 @@
+__author__ = 'bensoer'
+
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 from tools.argparcer import ArgParcer
 
