@@ -13,7 +13,6 @@ class GronsfeldCipher(AlgorithmInterface):
             raise AttributeError("A key value is required for the GronsfeldCipher")
         else:
             self.__key = key
-            self.__key.upper()
 
     def encryptString(self, unencryptedMessage):
 
