@@ -3,13 +3,13 @@ import sys
 
 unencryptedMessage = "Hello World!"
 
-p1 = 5
-p2 = 11
+p1 = 5  # prime number 1
+p2 = 11  # prime number 2
 
-t = 40
-n = 55
-e = 13
-d = 37
+t = 40  # totient. AKA (p1-1)*(p2-1)
+n = 55  # n. AKA p*q - part of public key
+e = 13  # e. prime number - part of public key
+d = 37  # d. private key
 
 
 plaintext_message_seg_length = int(math.floor(math.log(float(n), 2)))
@@ -74,9 +74,11 @@ print (" ** BEGINNING DECRYPTION **")
 binaryEncryptedMessage = str(bin(number))[2:]
 print(binaryEncryptedMessage)
 
+# pre pad encrypted until is appropriate length to be cut up
 while len(binaryEncryptedMessage) % encrypted_message_seg_length != 0:
     binaryEncryptedMessage = '0' + binaryEncryptedMessage
 
+# cut into decryptable segments
 encryptedMessageSegments = list()
 for i in range(0, len(binaryEncryptedMessage), encrypted_message_seg_length):
     encryptedMessageSegments.append(binaryEncryptedMessage[i: i + encrypted_message_seg_length])
@@ -92,6 +94,7 @@ for i in encryptedMessageSegments:
     unencryptedSegmentInt = int((segmentInt ** d) % n)
     print(unencryptedSegmentInt)
 
+    # left pad with 0 to return segment to decrypted segment length
     unencryptedSegmentBinary = format(unencryptedSegmentInt, '0' + str(plaintext_message_seg_length) + 'b')
     print(unencryptedSegmentBinary)
     unencryptedSegments.append(unencryptedSegmentBinary)
