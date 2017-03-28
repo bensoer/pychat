@@ -98,7 +98,7 @@ class RailFenceCipher(AlgorithmInterface):
                         print(letterIndex)
                         print(travelIndex)
                         print(railList)'''
-                        railList[lap].append(encryptedMessageText[letterIndex
+                        railList[lap].append(encryptedMessageText[letterIndex])
                         '''print("MATCH MADE. ASSIGNING LETTER: " + str(
                             encryptedMessageText[letterIndex]) + " TO LAP: " + str(lap))'''
                         letterIndex += 1
