@@ -26,8 +26,8 @@ class PureDESCipher(AlgorithmInterface):
             self.key = binaryKey
 
             self.generateSubKeys()
-            print(self.subkeys)
-            print(len(self.subkeys))
+            self.logger.debug(self.subkeys)
+            self.logger.debug(len(self.subkeys))
 
     def generateSubKeys(self):
 
@@ -78,14 +78,14 @@ class PureDESCipher(AlgorithmInterface):
 
         #convert message to binary
         binaryUnencryptedMessage = ''.join(format(ord(x), '08b') for x in unencryptedMessage)
-        print("Unencrypted Total Message: " + str(binaryUnencryptedMessage))
+        self.logger.debug("Unencrypted Total Message: " + str(binaryUnencryptedMessage))
 
         # split into blocks
         unencryptedMessageSegments = list()
         for i in range(0, len(binaryUnencryptedMessage), 64):
             unencryptedMessageSegments.append(binaryUnencryptedMessage[i: i + 64])
 
-        print("Blocks. PrePadded: " + str(unencryptedMessageSegments))
+        self.logger.debug("Blocks. PrePadded: " + str(unencryptedMessageSegments))
 
         #pad message to fit inside 64 bit blocks
         for index, block in enumerate(unencryptedMessageSegments):
@@ -93,7 +93,7 @@ class PureDESCipher(AlgorithmInterface):
                 block = '0' + block
             unencryptedMessageSegments[index] = block
 
-        print("Blocks. PostPAdded: " + str(unencryptedMessageSegments))
+        self.logger.debug("Blocks. PostPAdded: " + str(unencryptedMessageSegments))
 
         totalMessage = bytearray()
         binaryTotalMessage = ""
@@ -154,22 +154,19 @@ class PureDESCipher(AlgorithmInterface):
             # - convert to bytearray
             # - append to total message
 
-            print("Encrypted Message Segment: " + str(result))
+            self.logger.debug("Encrypted Message Segment: " + str(result))
             binaryTotalMessage += result
             byteArrayResult = int(result, 2).to_bytes(byteorder=sys.byteorder, length=math.ceil(len(result) / 8))
             #byteArrayResult = int(result, 2).to_bytes(len(result) // 8, byteorder=sys.byteorder)
-            print(byteArrayResult)
+            self.logger.debug(byteArrayResult)
             for byte in byteArrayResult:
                 totalMessage.append(byte)
 
-        print("BINARY: " + str(binaryTotalMessage))
-        print(totalMessage)
-        print("HEX: " + str(totalMessage))
+        self.logger.debug("BINARY: " + str(binaryTotalMessage))
+        self.logger.debug(totalMessage)
+        self.logger.debug("HEX: " + str(totalMessage))
         #binaryEncryptedMessage = ''.join(format(x, '04b') for x in totalMessage)
         #binaryEncryptedMessage = binascii.a2b_hex(totalMessage)
-
-
-
 
         return totalMessage
 
@@ -234,13 +231,7 @@ class PureDESCipher(AlgorithmInterface):
         return postP
 
     def decryptString(self, encryptedMessage):
-        #print(type(encryptedMessage))
-        #print(encryptedMessage)
-
-        #for byte in encryptedMessage:
-         #   print(byte)
-
-        print(encryptedMessage)
+        self.logger.debug(encryptedMessage)
 
         encryptedHexBlocks = list()
         for i in range(0, len(encryptedMessage), 8):
@@ -251,26 +242,10 @@ class PureDESCipher(AlgorithmInterface):
             number = bin(int.from_bytes(block, byteorder=sys.byteorder, signed=False))[2:]
             while len(number) % 64 != 0:
                 number = '0' + number
-                #number += '0'
             encryptedMessageSegments.append(number)
 
-        # convert message to binary
-        '''binaryEncryptedMessage = ''.join(format(x, '04b') for x in encryptedMessage)
-        print("FIRST BINARY: " + str(binaryEncryptedMessage))
-
-        # pad message to fit inside 64 bit blocks
-        while len(binaryEncryptedMessage) % 64 != 0:
-            binaryEncryptedMessage = '0' + binaryEncryptedMessage
-        #print(binaryEncryptedMessage)
-
-        # split into blocks
-        encryptedMessageSegments = list()
-        for i in range(0, len(binaryEncryptedMessage), 64):
-            encryptedMessageSegments.append(binaryEncryptedMessage[i: i + 64])
-        #print(encryptedMessageSegments)'''
-
         totalMessage = ""
-        print("Encrypted Message Segments: " + str(encryptedMessageSegments))
+        self.logger.debug("Encrypted Message Segments: " + str(encryptedMessageSegments))
 
         for index, segment in enumerate(encryptedMessageSegments):
 
@@ -331,12 +306,12 @@ class PureDESCipher(AlgorithmInterface):
             #byteArrayResult = int(result, 2).to_bytes(byteorder=sys.byteorder, length=math.ceil(len(result) / 8))
             totalMessage = totalMessage + result
 
-            print("UnEncrypted Segment: " + str(result))
-            print("UnEncrypted Segment: " + ''.join(chr(int(result[i:i + 8], 2)) for i in range(0, len(result), 8)))
+            self.logger.debug("UnEncrypted Segment: " + str(result))
+            self.logger.debug("UnEncrypted Segment: " + ''.join(chr(int(result[i:i + 8], 2)) for i in range(0, len(result), 8)))
 
         #print("HERE")
-        print("UnEncrypted Total Message: " + str(totalMessage))
+        self.logger.debug("UnEncrypted Total Message: " + str(totalMessage))
         unencryptedMessage = ''.join(chr(int(totalMessage[i:i + 8], 2)) for i in range(0, len(totalMessage), 8))
-        print(unencryptedMessage)
+        self.logger.debug(unencryptedMessage)
         return unencryptedMessage
 
