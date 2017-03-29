@@ -331,6 +331,9 @@ class PureDESCipher(AlgorithmInterface):
             #byteArrayResult = int(result, 2).to_bytes(byteorder=sys.byteorder, length=math.ceil(len(result) / 8))
             totalMessage = totalMessage + result
 
+            print("UnEncrypted Segment: " + str(result))
+            print("UnEncrypted Segment: " + ''.join(chr(int(result[i:i + 8], 2)) for i in range(0, len(result), 8)))
+
         #print("HERE")
         print("UnEncrypted Total Message: " + str(totalMessage))
         unencryptedMessage = ''.join(chr(int(totalMessage[i:i + 8], 2)) for i in range(0, len(totalMessage), 8))
