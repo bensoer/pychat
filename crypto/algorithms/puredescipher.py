@@ -80,18 +80,23 @@ class PureDESCipher(AlgorithmInterface):
         binaryUnencryptedMessage = ''.join(format(ord(x), '08b') for x in unencryptedMessage)
         print("Unencrypted Total Message: " + str(binaryUnencryptedMessage))
 
-        #pad message to fit inside 64 bit blocks
-        while len(binaryUnencryptedMessage) % 64 != 0:
-            binaryUnencryptedMessage = '0' + binaryUnencryptedMessage
-
-        #split into blocks
+        # split into blocks
         unencryptedMessageSegments = list()
         for i in range(0, len(binaryUnencryptedMessage), 64):
             unencryptedMessageSegments.append(binaryUnencryptedMessage[i: i + 64])
 
+        print("Blocks. PrePadded: " + str(unencryptedMessageSegments))
+
+        #pad message to fit inside 64 bit blocks
+        for index, block in enumerate(unencryptedMessageSegments):
+            while len(block) % 64 != 0:
+                block = '0' + block
+            unencryptedMessageSegments[index] = block
+
+        print("Blocks. PostPAdded: " + str(unencryptedMessageSegments))
+
         totalMessage = bytearray()
         binaryTotalMessage = ""
-
 
         for index, segment in enumerate(unencryptedMessageSegments):
 
