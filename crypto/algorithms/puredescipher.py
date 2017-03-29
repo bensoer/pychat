@@ -5,6 +5,7 @@ from Crypto.Hash import SHA256
 import tools.destools as destools
 import math
 import sys
+import binascii
 
 class PureDESCipher(AlgorithmInterface):
 
@@ -77,6 +78,7 @@ class PureDESCipher(AlgorithmInterface):
 
         #convert message to binary
         binaryUnencryptedMessage = ''.join(format(ord(x), '08b') for x in unencryptedMessage)
+        print("Unencrypted Total Message: " + str(binaryUnencryptedMessage))
 
         #pad message to fit inside 64 bit blocks
         while len(binaryUnencryptedMessage) % 64 != 0:
@@ -88,6 +90,8 @@ class PureDESCipher(AlgorithmInterface):
             unencryptedMessageSegments.append(binaryUnencryptedMessage[i: i + 64])
 
         totalMessage = bytearray()
+        binaryTotalMessage = ""
+
 
         for index, segment in enumerate(unencryptedMessageSegments):
 
@@ -106,6 +110,7 @@ class PureDESCipher(AlgorithmInterface):
             #for 15 cycles
             for i in range(0, 15):
 
+                #print("INDEX: " + str(i))
                 # calculate F
                 f = self.calculateF(right, self.subkeys[i])
 
@@ -144,8 +149,22 @@ class PureDESCipher(AlgorithmInterface):
             # - convert to bytearray
             # - append to total message
 
+            print("Encrypted Message Segment: " + str(result))
+            binaryTotalMessage += result
             byteArrayResult = int(result, 2).to_bytes(byteorder=sys.byteorder, length=math.ceil(len(result) / 8))
-            totalMessage.append(byteArrayResult)
+            #byteArrayResult = int(result, 2).to_bytes(len(result) // 8, byteorder=sys.byteorder)
+            print(byteArrayResult)
+            for byte in byteArrayResult:
+                totalMessage.append(byte)
+
+        print("BINARY: " + str(binaryTotalMessage))
+        print(totalMessage)
+        print("HEX: " + str(totalMessage))
+        #binaryEncryptedMessage = ''.join(format(x, '04b') for x in totalMessage)
+        #binaryEncryptedMessage = binascii.a2b_hex(totalMessage)
+
+
+
 
         return totalMessage
 
@@ -171,21 +190,28 @@ class PureDESCipher(AlgorithmInterface):
 
         # prepare for s-table processing
         binaryStringSegments = list()
-        for i in range(0, len(binaryStringSegments), 6):
-            binaryStringSegments.append(binaryStringSegments[i: i + 6])
+        for i in range(0, len(binaryString), 6):
+            binaryStringSegments.append(binaryString[i: i + 6])
+
+        #print("BinaryStringSegments: " + str(binaryStringSegments))
 
         preP = ""
         # run through s-tables
         for index, segment in enumerate(binaryStringSegments):
+            #print("Processing S-Table")
             stable = destools.STABLES.tables[index]
 
-            ybin = segment[0] + segment[6]
+            ybin = segment[0] + segment[5]
+            #print("ybin: " + str(ybin))
             y = int(ybin, 2)
+            #print("y: " + str(y))
 
             xbin = segment[1:5]
+            #print("xbin: " + str(xbin))
             x = int(xbin, 2)
+            #print("x: " + str(x))
 
-            replaceSegment = stable[x][y]
+            replaceSegment = stable[y][x]
             binReplaceSegment = bin(replaceSegment)[2:]
             while len(binReplaceSegment) % 4 != 0:
                 binReplaceSegment = '0' + binReplaceSegment
@@ -197,18 +223,112 @@ class PureDESCipher(AlgorithmInterface):
         postP = ""
         for i in range(0, len(destools.FTABLES.ptable)):
             replacebit = (destools.FTABLES.ptable[i] - 1)
+            #print("INDEX: " + str(i) + " REPLACEBIT: " + str(replacebit))
             postP += prePList[replacebit]
 
         return postP
 
-
-
     def decryptString(self, encryptedMessage):
+        #print(type(encryptedMessage))
+        #print(encryptedMessage)
 
-        encryptedMessage = encryptedMessage.decode()
-        decryptedMessage = ""
-        for letter in encryptedMessage:
-            decryptedLetter = chr(ord(letter) - self.offset)
-            decryptedMessage += decryptedLetter
-        return decryptedMessage
+        #for byte in encryptedMessage:
+         #   print(byte)
+
+        print(encryptedMessage)
+
+        encryptedHexBlocks = list()
+        for i in range(0, len(encryptedMessage), 8):
+            encryptedHexBlocks.append(encryptedMessage[i: i + 8])
+
+        encryptedMessageSegments = list()
+        for block in encryptedHexBlocks:
+            number = bin(int.from_bytes(block, byteorder=sys.byteorder, signed=False))[2:]
+            while len(number) % 64 != 0:
+                number = '0' + number
+                #number += '0'
+            encryptedMessageSegments.append(number)
+
+        # convert message to binary
+        '''binaryEncryptedMessage = ''.join(format(x, '04b') for x in encryptedMessage)
+        print("FIRST BINARY: " + str(binaryEncryptedMessage))
+
+        # pad message to fit inside 64 bit blocks
+        while len(binaryEncryptedMessage) % 64 != 0:
+            binaryEncryptedMessage = '0' + binaryEncryptedMessage
+        #print(binaryEncryptedMessage)
+
+        # split into blocks
+        encryptedMessageSegments = list()
+        for i in range(0, len(binaryEncryptedMessage), 64):
+            encryptedMessageSegments.append(binaryEncryptedMessage[i: i + 64])
+        #print(encryptedMessageSegments)'''
+
+        totalMessage = ""
+        print("Encrypted Message Segments: " + str(encryptedMessageSegments))
+
+        for index, segment in enumerate(encryptedMessageSegments):
+
+            # ip
+            segmentList = list(segment)
+            postip = ""
+            for i in range(0, len(destools.IPTABLE.initialPermutation)):
+                replacebit = (destools.IPTABLE.initialPermutation[i] - 1)
+                postip = postip + segmentList[replacebit]
+
+            # left right split
+            postipList = list(postip)
+            left = "".join(postipList[:32])
+            right = "".join(postipList[32:])
+
+            # for 15 cycles
+            for i in range(15, 0, -1):
+
+                # calculate F
+                #print("using subkey: " + str(i))
+                f = self.calculateF(right, self.subkeys[i])
+
+                # XOR left with F
+                xorResult = int(f, 2) ^ int(left, 2)
+                binaryString = bin(xorResult)[2:]
+                while len(binaryString) % 32 != 0:
+                    binaryString = '0' + binaryString
+
+                # swap
+                left = right
+                right = binaryString
+
+            # -- last cycle
+
+            # calculate F
+            f = self.calculateF(right, self.subkeys[0])  # the 16th and last subkey
+
+            # XOR left with F
+            xorResult = int(f, 2) ^ int(left, 2)
+            binaryString = bin(xorResult)[2:]
+            while len(binaryString) % 32 != 0:
+                binaryString = '0' + binaryString
+
+            # Left is left right is right
+            # append together
+            fullResult = binaryString + right
+
+            # inverse IP
+            result = ""
+            for i in range(0, len(destools.IPTABLE.finalPermutation)):
+                replacebit = (destools.IPTABLE.finalPermutation[i] - 1)
+                result = result + fullResult[replacebit]
+
+            # output made
+            # - convert to bytearray
+            # - append to total message
+
+            #byteArrayResult = int(result, 2).to_bytes(byteorder=sys.byteorder, length=math.ceil(len(result) / 8))
+            totalMessage = totalMessage + result
+
+        #print("HERE")
+        print("UnEncrypted Total Message: " + str(totalMessage))
+        unencryptedMessage = ''.join(chr(int(totalMessage[i:i + 8], 2)) for i in range(0, len(totalMessage), 8))
+        print(unencryptedMessage)
+        return unencryptedMessage
 
