@@ -181,3 +181,11 @@ class Cryptor:
 
     def getDigestSize(self, message):
         logger.debug("Fetching Digest Length For Hash")
+
+    def sendFirstMessageAgain(self):
+        logger.debug("Checking With Algorithm Whether To Send The First Message Again")
+        return self._loadedAlgorithm.callSendFirstMessageAgain()
+
+    def receiveNextMessageThroughFirstMessage(self):
+        logger.debug("Checking With Algorithm Whether To Send Next Received Message Through First Message")
+        return self._loadedAlgorithm.receiveNextMessageThroughFirstMessage()

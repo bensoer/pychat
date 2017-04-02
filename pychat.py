@@ -131,6 +131,12 @@ def recv_handler():
         elif command_code == CommandType.Encrypt:
             message = cryptor.encrypt(back_command[1])
             parent_conn.send([message])
+        elif command_code == CommandType.ReceiveMessageThroughFirst:
+            message = cryptor.receiveNextMessageThroughFirstMessage()
+            parent_conn.send([message])
+        elif command_code == CommandType.SendFirstMessageAgain:
+            message = cryptor.sendFirstMessageAgain()
+            parent_conn.send([message])
         else:
             print("Unknown Command Received")
 logger.debug("Handler Thread For Listening and Cryptor Synchronization Setup")

@@ -91,29 +91,53 @@ class ListenerMultiProcess:
                             # if you don't want firstMessage to write to console, assume u never want it to
                             self.__rejectFirstMessageMatches = True
                     else:
-                        # drop anything that looks like the first message if rejection is set
-                        if self.__rejectFirstMessageMatches:
-                            if encryptedMessage != self.__firstMessage:
+
+                        #check if receiveNextMessageThroughFirstMessage is true
+                        self.__child_conn_pipe.send([CommandType.ReceiveMessageThroughFirst, encryptedMessage])
+                        receiveNextMessageThroughFirstMessage = self.__child_conn_pipe.recv()[0]
+                        if receiveNextMessageThroughFirstMessage:
+                            self.__child_conn_pipe.send([CommandType.GiveFirstMessage, encryptedMessage])
+                            writeToConsole = self.__child_conn_pipe.recv()[0]
+
+                            # check the original reply has been sent
+                            if self.__replySent == True:
+                                # check if the algo wants us to resend original message
+                                self.__child_conn_pipe.send([CommandType.SendFirstMessageAgain])
+                                sendFirstMessageAgain = self.__child_conn_pipe.recv()[0]
+                                if sendFirstMessageAgain:
+
+                                    # firstMessageToBeSent = self.__decryptor.getInitializationMessage()
+                                    self.__child_conn_pipe.send([CommandType.GetInitializationMessage])
+                                    firstMessageToBeSent = self.__child_conn_pipe.recv()[0]
+                                    # if first message does exist then send it
+                                    if len(firstMessageToBeSent) > 0:
+                                        socket.sendto(firstMessageToBeSent, address)
+
+                            if writeToConsole:
+                                # if you wanted to write to console, then everything should be able to write to console
+                                self.__rejectFirstMessageMatches = False
+                                #if we are to write to console then decrypt the message using algorithms decryptor
                                 #decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
                                 self.__child_conn_pipe.send([CommandType.Decrypt, encryptedMessage])
                                 decryptedMessage = self.__child_conn_pipe.recv()[0]
-                                print(decryptedMessage)
+                                #if the message is empty though don't bother printing it
+                                if decryptedMessage != "":
+                                    print(decryptedMessage)
+                            else:
+                                # if you don't want firstMessage to write to console, assume u never want it to
+                                self.__rejectFirstMessageMatches = True
                         else:
-                            # decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
-                            self.__child_conn_pipe.send([CommandType.Decrypt, encryptedMessage])
-                            decryptedMessage = self.__child_conn_pipe.recv()[0]
-                            print(decryptedMessage)
 
+                            # drop anything that looks like the first message if rejection is set
+                            if self.__rejectFirstMessageMatches:
+                                if encryptedMessage != self.__firstMessage:
+                                    #decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                                    self.__child_conn_pipe.send([CommandType.Decrypt, encryptedMessage])
+                                    decryptedMessage = self.__child_conn_pipe.recv()[0]
+                                    print(decryptedMessage)
+                            else:
+                                # decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
+                                self.__child_conn_pipe.send([CommandType.Decrypt, encryptedMessage])
+                                decryptedMessage = self.__child_conn_pipe.recv()[0]
+                                print(decryptedMessage)
 
-
-
-
-            '''
-            try:
-                message, address = self.__socket.recvfrom(2048)
-                encryptedMessage = message.decode()
-                decryptedMessage = self.__decryptor.decrypt(encryptedMessage)
-                print(decryptedMessage)
-            except Exception:
-                pass
-            '''
