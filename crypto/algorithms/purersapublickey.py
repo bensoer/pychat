@@ -6,7 +6,7 @@ import tools.rsatools as RSATools
 import math
 import sys
 
-class PureRSA(AlgorithmInterface):
+class PureRSAPublicKey(AlgorithmInterface):
 
     n = None
     totient = None
