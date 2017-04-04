@@ -8,21 +8,17 @@ import sys
 # https://en.wikipedia.org/wiki/MD5 - example implementation
 
 
-
-
 class PureMD5(HashInterface):
 
 
     shiftRounds = [
         7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
-        5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+        5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
         4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
         6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
     ]
 
     k = []
-
-
 
     def __init__(self):
         # generate k table
@@ -62,7 +58,6 @@ class PureMD5(HashInterface):
             M = []
             for j in range(0, 512, 32):
                 M.append(segment[j:j+32])
-
 
 
             a = a0

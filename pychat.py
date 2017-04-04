@@ -123,6 +123,7 @@ def recv_handler():
             writeToConsole = cryptor.giveFirstMessage(back_command[1])
             parent_conn.send([writeToConsole])
         elif command_code == CommandType.GetInitializationMessage:
+            logger.debug("GetInitializationMessage Called From Listener MultiProcess")
             message = cryptor.getInitializationMessage()
             parent_conn.send([message])
         elif command_code == CommandType.Decrypt:
