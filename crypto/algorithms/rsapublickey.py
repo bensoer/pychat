@@ -24,35 +24,36 @@ class RSAPublicKey(AlgorithmInterface):
         ''' 
         generate the public / private key pair to be used
         '''
-        key_size = 1024
-        self.key = RSA.generate(key_size)
-        self.publickey = self.key.publickey()
-        self.other_publickey = None
+        keySize = 2048
+        self.key = RSA.generate(keySize)
+        self.publicKey = self.key.publickey()
+        self.otherPublicKey = None
 
     def sendFirstMessage(self):
         ''' 
         we need to send the other person our own public key
         '''
-        return self.publickey.exportKey(passphrase='pychat')
+        return self.publicKey.exportKey(passphrase='pychat')
     
     def receiveFirstMessage(self, firstMessage):
         ''' 
         we should recieve the other persons public key
         '''
-        self.other_publickey = RSA.importKey(firstMessage, passphrase='pychat')
-        return False #returning True attempts to decrypt the message (ATM)
+        self.otherPublicKey = RSA.importKey(firstMessage, passphrase='pychat')
+        return False #returning True attempts to decrypt the message
 
     def encryptString(self, unencryptedMessage):
         ''' 
-        must encrypt with other users public key (self.other_publickey)
+        must encrypt with other users public key (self.otherPublicKey)
         '''
-        encryptedMessage = self.other_publickey.encrypt(unencryptedMessage)
+        encryptedTuple = self.otherPublicKey.encrypt(bytes(unencryptedMessage,'utf-8'), 'pychat')
+        encryptedMessage = encryptedTuple[0]
         return encryptedMessage
 
     def decryptString(self, encryptedMessage):
         ''' 
-        assuming that the encrypted message was encrypted with self.publickey
+        assuming that the encrypted message was encrypted with self.publicKey
         generated above we can decrypt with our private key (self.key)
         '''
         decryptedMessage = self.key.decrypt(encryptedMessage)
-        return self._unpad(decryptedMessage).decode('utf-8')
+        return decryptedMessage.decode('utf-8')
