@@ -1,3 +1,4 @@
+__author__='bensoer'
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 from crypto.algorithms.rsapublickey import RSAPublicKey
 from crypto.algorithms.aescipher import AESCipher
