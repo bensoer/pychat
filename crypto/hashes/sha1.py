@@ -1,3 +1,4 @@
+__author__='bensoer'
 from crypto.hashes.hashinterface import HashInterface
 from Crypto.Hash import SHA
 
