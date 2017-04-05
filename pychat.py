@@ -65,17 +65,15 @@ consoleChannel = logging.StreamHandler()
 consoleChannel.setFormatter(formatter)
 if debugMode:
     consoleChannel.setLevel(logging.DEBUG)
+
+    fileChannel = logging.FileHandler("debug-" + str(os.getpid()) + ".log")
+    fileChannel.setFormatter(formatter)
+    fileChannel.setLevel(logging.DEBUG)
+    logger.addHandler(fileChannel)
 else:
     consoleChannel.setLevel(logging.INFO)
 
-#file logging channel
-fileChannel = logging.FileHandler("debug-" + str(os.getpid()) + ".log")
-fileChannel.setFormatter(formatter)
-fileChannel.setLevel(logging.DEBUG)
-
 logger.addHandler(consoleChannel)
-logger.addHandler(fileChannel)
-
 logger.debug("Logging Initialized")
 
 
