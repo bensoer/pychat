@@ -20,12 +20,10 @@ class RSAAESCipher(AlgorithmInterface):
         self.aesAlgo = AESCipher(arguments)
 
     def encryptString(self, unencryptedMessage):
-        print("SOMETHING TO ENCRYPT")
-        pass
+        return self.aesAlgo.encryptString(unencryptedMessage)
 
     def decryptString(self, encryptedMessage):
-        print("SOMETHING TO DECRYPT")
-        pass
+        return self.aesAlgo.decryptString(encryptedMessage)
 
     def receiveFirstMessage(self, firstMessage):
 
@@ -37,9 +35,10 @@ class RSAAESCipher(AlgorithmInterface):
 
         # now we can expect the AES Key to arrive sometime
         else:
-            print(type(self.rsaAlgo.other_publickey.exportKey(passphrase='pychat')))
-            print(type(firstMessage))
-            if self.rsaAlgo.other_publickey.exportKey(passphrase='pychat') != firstMessage:
+
+            #print(type(self.rsaAlgo.otherPublicKey.exportKey(passphrase='pychat')))
+            #print(type(firstMessage))
+            if self.rsaAlgo.otherPublicKey.exportKey(passphrase='pychat') != firstMessage:
                 # then this must be the AES key
                 self.logger.debug("AES Key Has Been Received")
                 self.aesAlgo.key = self.rsaAlgo.key.decrypt(firstMessage)
@@ -50,13 +49,13 @@ class RSAAESCipher(AlgorithmInterface):
 
     def sendFirstMessage(self):
         if (not self.receivedRSAKey) or self.RSASendCount < 2:
-            print("SENDING RSA")
+            self.logger.debug("SENDING RSA")
             self.RSASendCount += 1
             return self.rsaAlgo.sendFirstMessage()
         else:
-            print("SENDING AES")
-            # note that the AES key here is not encrypted with the RSA Algo :S
-            return self.rsaAlgo.encryptString(self.aesAlgo.key)
+            self.logger.debug("SENDING AES")
+            self.receivedAESKey = True
+            return self.rsaAlgo.otherPublicKey.encrypt(self.aesAlgo.key, 'pychat')[0]
 
     def receiveNextMessageThroughFirstMessage(self):
         return not self.receivedAESKey
