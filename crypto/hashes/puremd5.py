@@ -3,6 +3,7 @@ from crypto.hashes.hashinterface import HashInterface
 from Crypto.Hash import MD5 as libmd5
 import math
 import sys
+import base64
 
 # https://www.ietf.org/rfc/rfc1321.txt
 # https://en.wikipedia.org/wiki/MD5 - example implementation
@@ -23,7 +24,17 @@ class PureMD5(HashInterface):
     def __init__(self):
         # generate k table
         for i in range(0, 63):
-            self.k[i] = math.floor(((2 ** 32) * abs(math.sin(i + 1))))
+            self.k.append(math.floor(((2 ** 32) * abs(math.sin(i + 1)))))
+
+    def rotl(self, num, bits):
+        bit = num & (1 << (bits - 1))
+        num <<= 1
+        if (bit):
+            num |= 1
+        num &= (2 ** bits - 1)
+
+        return num
+
 
     def leftrotate(self, x, c):
         return (x << c) | (x >> (32-c))
@@ -31,15 +42,19 @@ class PureMD5(HashInterface):
     def pad(self, bitStringMessage):
 
         originalBitStringMessage = bitStringMessage
-        extraAppendLength = len(originalBitStringMessage) % (2**64)
-        extraAppendStringMessage = originalBitStringMessage[0:extraAppendLength]
+        extraAppendStringMessage = ""
+        if len(originalBitStringMessage) > 64:
+            extraAppendStringMessage = originalBitStringMessage[0:64]
+        else:
+            extraAppendStringMessage = originalBitStringMessage
+            while len(extraAppendStringMessage) < 64:
+                extraAppendStringMessage += '0'
 
         bitStringMessage = '1' + bitStringMessage
-        while (len(bitStringMessage) - 488) % 512 != 0:
+        while (len(bitStringMessage) - 448) % 512 != 0:
             bitStringMessage = '0' + bitStringMessage
 
         bitStringMessage += extraAppendStringMessage
-
         return bitStringMessage
 
     def hashString(self, stringMessage):
@@ -47,7 +62,10 @@ class PureMD5(HashInterface):
         bitStringMessage = ''.join(format(ord(x), '08b') for x in stringMessage)
         bitStringMessage = self.pad(bitStringMessage)
 
+        print(len(bitStringMessage))
+
         a0 = 0x67452301
+        print(a0)
         b0 = 0xefcdab89
         c0 = 0x98badcfe
         d0 = 0x10325476
@@ -59,8 +77,11 @@ class PureMD5(HashInterface):
             for j in range(0, 512, 32):
                 M.append(segment[j:j+32])
 
+            print(M)
+
 
             a = a0
+            print("A Before: " + str(a))
             b = b0
             c = c0
             d = d0
@@ -82,10 +103,16 @@ class PureMD5(HashInterface):
                     F = c ^ (b | (~d))
                     g = (7*i) % 16
 
+                print("A Loop: " + str(j) + ": " + str(a))
                 dtemp = d
                 d = c
                 c = b
-                b = b + self.leftrotate((a + F + self.k[i] + int(M[g], 2)), self.shiftRounds[i])
+
+                value = a + F + self.k[j] + int(M[g], 2)
+                print("Pre Rotate Value: " + str(value) + " . " + bin(value))
+                print("Rotate Amount: " + str(self.shiftRounds[j]))
+                b = b + self.rotl(value, self.shiftRounds[j])
+                print("Post Rotate Value: " + str(b) + " . " + bin(b))
                 a = dtemp
 
             a0 += a
@@ -93,10 +120,13 @@ class PureMD5(HashInterface):
             c0 += c
             d0 += d
 
-            aHash = a0.to_bytes(4, sys.byteorder)
-            bHash = b0.to_bytes(4, sys.byteorder)
-            cHash = c0.to_bytes(4, sys.byteorder)
-            dHash = d0.to_bytes(4, sys.byteorder)
+            print(a0)
+            print(a0.bit_length())
+            aHash = a0.to_bytes(4, sys.byteorder, signed=False)
+
+            bHash = b0.to_bytes(4, sys.byteorder, signed=False)
+            cHash = c0.to_bytes(4, sys.byteorder, signed=False)
+            dHash = d0.to_bytes(4, sys.byteorder, signed=False)
 
             hash = bytearray()
             for byte in aHash:
