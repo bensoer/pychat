@@ -6,21 +6,26 @@ import tools.destools as destools
 import math
 import sys
 import binascii
+import tools.modetools as modetools
+
 
 class PureDESCipher(AlgorithmInterface):
 
     key = None
     subkeys = []
+    mode = None
+    modeHandler = None
 
     def __init__(self, arguments):
 
         # if they pass an o parameter, use this as the offset value
-        key = ArgParcer.getValue(arguments, "-k")
-        if key == "":
+        self.key = ArgParcer.getValue(arguments, "-k")
+        mode = ArgParcer.getValue(arguments, "-m")
+        if self.key == "" or mode == "":
             raise AttributeError("Key Is Required For DES")
         else:
             hasher = SHA256.new()
-            hasher.update(bytes(key, 'utf-8'))
+            hasher.update(bytes(self.key, 'utf-8'))
             hash = hasher.hexdigest()
             binaryKey = ''.join(format(int(x, 16), '04b') for x in hash[:16])
             self.key = binaryKey
@@ -28,6 +33,9 @@ class PureDESCipher(AlgorithmInterface):
             self.generateSubKeys()
             self.logger.debug(self.subkeys)
             self.logger.debug(len(self.subkeys))
+
+            self.mode = modetools.MODE[mode]
+            self.modeHandler = modetools.ModeHandler(self.mode, 64)
 
     def generateSubKeys(self):
 
@@ -95,7 +103,7 @@ class PureDESCipher(AlgorithmInterface):
 
         self.logger.debug("Blocks. PostPAdded: " + str(unencryptedMessageSegments))
 
-        totalMessage = bytearray()
+        #totalMessage = bytearray()
         binaryTotalMessage = ""
 
         for index, segment in enumerate(unencryptedMessageSegments):
@@ -159,16 +167,18 @@ class PureDESCipher(AlgorithmInterface):
             byteArrayResult = int(result, 2).to_bytes(byteorder=sys.byteorder, length=math.ceil(len(result) / 8))
             #byteArrayResult = int(result, 2).to_bytes(len(result) // 8, byteorder=sys.byteorder)
             self.logger.debug(byteArrayResult)
-            for byte in byteArrayResult:
+            '''for byte in byteArrayResult:
                 totalMessage.append(byte)
+                '''
+            self.modeHandler.addBlock(byteArrayResult)
 
         self.logger.debug("BINARY: " + str(binaryTotalMessage))
-        self.logger.debug(totalMessage)
-        self.logger.debug("HEX: " + str(totalMessage))
+        self.logger.debug(self.modeHandler.getResultForMode())
+        self.logger.debug("HEX: " + str(self.modeHandler.getResultForMode()))
         #binaryEncryptedMessage = ''.join(format(x, '04b') for x in totalMessage)
         #binaryEncryptedMessage = binascii.a2b_hex(totalMessage)
 
-        return totalMessage
+        return self.modeHandler.getResultForMode()
 
     def calculateF(self, right, key):
         '''
@@ -304,14 +314,24 @@ class PureDESCipher(AlgorithmInterface):
             # - append to total message
 
             #byteArrayResult = int(result, 2).to_bytes(byteorder=sys.byteorder, length=math.ceil(len(result) / 8))
+            #print("RESULT: " + str(result))
+            byteArrayResult = int(result, 2)
+            #print("INT: " + str(byteArrayResult))
+            bytesArray = byteArrayResult.to_bytes(byteorder='big', length=math.ceil(len(result) / 8))
+            #print("BYTES: " + str(bytesArray))
             totalMessage = totalMessage + result
+
+            self.modeHandler.addBlock(bytesArray)
 
             self.logger.debug("UnEncrypted Segment: " + str(result))
             self.logger.debug("UnEncrypted Segment: " + ''.join(chr(int(result[i:i + 8], 2)) for i in range(0, len(result), 8)))
 
         #print("HERE")
         self.logger.debug("UnEncrypted Total Message: " + str(totalMessage))
-        unencryptedMessage = ''.join(chr(int(totalMessage[i:i + 8], 2)) for i in range(0, len(totalMessage), 8))
+        #unencryptedMessage = ''.join(chr(int(totalMessage[i:i + 8], 2)) for i in range(0, len(totalMessage), 8))
+        unencryptedMessage = ''.join(chr(int(self.modeHandler.getResultForMode()[i])) for i in range(0, len(self.modeHandler.getResultForMode())))
         self.logger.debug(unencryptedMessage)
+        print(self.modeHandler.getResultForMode())
+        print(unencryptedMessage)
         return unencryptedMessage
 
