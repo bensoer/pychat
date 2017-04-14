@@ -120,7 +120,7 @@ class Cryptor:
         logger.debug("Hash Package Import Successful. Now Attempting Class")
         mod = getattr(pkg, self._strHash)
         logger.debug("Hash Class Import Successful. Loading Into Attributes")
-        self._loadedHash = mod()
+        self._loadedHash = mod(self._arguments)
 
     def setArguments(self, arguments):
         logger.debug("Setting System Arguments As Attribute")

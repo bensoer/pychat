@@ -11,7 +11,7 @@ class SHA1(HashInterface):
         return sha1.digest()
 
     def getDigestSize(self):
-        return 20
+        return SHA.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes

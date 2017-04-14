@@ -11,7 +11,7 @@ class SHA384(HashInterface):
         return sha384.digest()
 
     def getDigestSize(self):
-        return 48
+        return libsha384.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes

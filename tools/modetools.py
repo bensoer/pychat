@@ -34,3 +34,6 @@ class ModeHandler:
 
     def getResultForMode(self):
         return self.data
+
+    def clearData(self):
+        self.data = bytearray()

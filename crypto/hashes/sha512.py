@@ -12,7 +12,7 @@ class SHA512(HashInterface):
 
 
     def getDigestSize(self):
-        return 64
+        return libsha512.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes

@@ -41,3 +41,10 @@ class HashInterface(metaclass=ABCMeta):
         match
         '''
         raise NotImplementedError
+
+    def __init__(self, arguments):
+        '''
+        Constructor for hashing algorithms, passed the program arguments from the terminal. Is optional in hash
+        implementation
+        :param arguments: String - copy of param arguments from the terminal
+        '''

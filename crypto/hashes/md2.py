@@ -11,7 +11,7 @@ class MD2(HashInterface):
         return md2.digest()
 
     def getDigestSize(self):
-        return 16
+        return libmd2.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes

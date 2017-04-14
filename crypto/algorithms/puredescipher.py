@@ -22,7 +22,7 @@ class PureDESCipher(AlgorithmInterface):
         self.key = ArgParcer.getValue(arguments, "-k")
         mode = ArgParcer.getValue(arguments, "-m")
         if self.key == "" or mode == "":
-            raise AttributeError("Key Is Required For DES")
+            raise AttributeError("Key And Mode Are Required For PureDES")
         else:
             hasher = SHA256.new()
             hasher.update(bytes(self.key, 'utf-8'))
@@ -178,7 +178,9 @@ class PureDESCipher(AlgorithmInterface):
         #binaryEncryptedMessage = ''.join(format(x, '04b') for x in totalMessage)
         #binaryEncryptedMessage = binascii.a2b_hex(totalMessage)
 
-        return self.modeHandler.getResultForMode()
+        encryptedMessage = self.modeHandler.getResultForMode()
+        self.modeHandler.clearData()
+        return encryptedMessage
 
     def calculateF(self, right, key):
         '''
@@ -331,7 +333,8 @@ class PureDESCipher(AlgorithmInterface):
         #unencryptedMessage = ''.join(chr(int(totalMessage[i:i + 8], 2)) for i in range(0, len(totalMessage), 8))
         unencryptedMessage = ''.join(chr(int(self.modeHandler.getResultForMode()[i])) for i in range(0, len(self.modeHandler.getResultForMode())))
         self.logger.debug(unencryptedMessage)
-        print(self.modeHandler.getResultForMode())
-        print(unencryptedMessage)
+        #print(self.modeHandler.getResultForMode())
+        #print(unencryptedMessage)
+        self.modeHandler.clearData()
         return unencryptedMessage
 

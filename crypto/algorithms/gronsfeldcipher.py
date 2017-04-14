@@ -15,8 +15,8 @@ class GronsfeldCipher(AlgorithmInterface):
     def __init__(self, arguments):
 
         key = ArgParcer.getValue(arguments, "-k")
-        if key == "" :
-            raise AttributeError("A key value is required for the GronsfeldCipher")
+        if key == "":
+            raise AttributeError("An integer key value is required for the GronsfeldCipher")
         else:
             self.__key = key
 

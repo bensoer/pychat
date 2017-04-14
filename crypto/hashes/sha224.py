@@ -11,7 +11,7 @@ class SHA224(HashInterface):
         return sha224.digest()
 
     def getDigestSize(self):
-        return 28
+        return libsha224.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes
