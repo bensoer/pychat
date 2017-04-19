@@ -98,4 +98,26 @@ Example
 
    python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a CaesarCipher -v SHA512
 
+HMAC
+====
+Verify message integrity using MAC algorithm. This MAC algorithm incorporates a hashing function and a password
+to generate a verifiable signature by both parties
 
+Only the `-hk` parameter listed below is **required**
+
++-----------+-------------------------------------------------------------------------------------------------------+
+| Parameter | Description                                                                                           |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -hk       || The shared password used for generating the hash signature                                           |
++-----------+-------------------------------------------------------------------------------------------------------+
+| -hm       || The hashing mode to be used. Default is SHA1.                                                        |
+|           || Values can be SHA1, SHA224, SHA256, SHA384, SHA512, MD5                                              |
++-----------+-------------------------------------------------------------------------------------------------------+
+
+Example
+-------
+Set the hash password to `spaghetti` and the mode to `SHA256`
+
+.. code-block:: bash
+
+   python3 pychat.py -h localhost -p 7000 -lp 8000 -u bert -a CaesarCipher -v HMAC -hp spaghetti -hm SHA256
