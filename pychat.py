@@ -65,17 +65,15 @@ consoleChannel = logging.StreamHandler()
 consoleChannel.setFormatter(formatter)
 if debugMode:
     consoleChannel.setLevel(logging.DEBUG)
+
+    fileChannel = logging.FileHandler("debug-" + str(os.getpid()) + ".log")
+    fileChannel.setFormatter(formatter)
+    fileChannel.setLevel(logging.DEBUG)
+    logger.addHandler(fileChannel)
 else:
     consoleChannel.setLevel(logging.INFO)
 
-#file logging channel
-fileChannel = logging.FileHandler("debug-" + str(os.getpid()) + ".log")
-fileChannel.setFormatter(formatter)
-fileChannel.setLevel(logging.DEBUG)
-
 logger.addHandler(consoleChannel)
-logger.addHandler(fileChannel)
-
 logger.debug("Logging Initialized")
 
 
@@ -123,6 +121,7 @@ def recv_handler():
             writeToConsole = cryptor.giveFirstMessage(back_command[1])
             parent_conn.send([writeToConsole])
         elif command_code == CommandType.GetInitializationMessage:
+            logger.debug("GetInitializationMessage Called From Listener MultiProcess")
             message = cryptor.getInitializationMessage()
             parent_conn.send([message])
         elif command_code == CommandType.Decrypt:
@@ -130,6 +129,12 @@ def recv_handler():
             parent_conn.send([message])
         elif command_code == CommandType.Encrypt:
             message = cryptor.encrypt(back_command[1])
+            parent_conn.send([message])
+        elif command_code == CommandType.ReceiveMessageThroughFirst:
+            message = cryptor.receiveNextMessageThroughFirstMessage()
+            parent_conn.send([message])
+        elif command_code == CommandType.SendFirstMessageAgain:
+            message = cryptor.sendFirstMessageAgain()
             parent_conn.send([message])
         else:
             print("Unknown Command Received")

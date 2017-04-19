@@ -5,4 +5,6 @@ class CommandType(Enum):
     GiveFirstMessage = 1,
     GetInitializationMessage = 2,
     Decrypt = 3,
-    Encrypt = 4
+    Encrypt = 4,
+    ReceiveMessageThroughFirst = 5,
+    SendFirstMessageAgain = 6

@@ -1,8 +1,13 @@
-__author__='bensoer'
+__author__ = 'bensoer'
+
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 from tools.argparcer import ArgParcer
 
-class VigenereCipher(AlgorithmInterface):
+'''
+http://www.cryptool-online.org/index.php?option=com_content&view=article&id=120&Itemid=143&lang=en
+'''
+
+class GronsfeldCipher(AlgorithmInterface):
 
     __key = ""
 
@@ -11,18 +16,16 @@ class VigenereCipher(AlgorithmInterface):
 
         key = ArgParcer.getValue(arguments, "-k")
         if key == "":
-            raise AttributeError("Key Is Required Parameter For Vigenere Cipher")
+            raise AttributeError("An integer key value is required for the GronsfeldCipher")
         else:
             self.__key = key
-            self.__key.upper()
 
     def encryptString(self, unencryptedMessage):
 
         encryptedMessage = ""
         for index, letter in enumerate(unencryptedMessage):
             keyIndex = index % len(self.__key)
-            keyLetter = self.__key[keyIndex]
-            offset = abs(ord(keyLetter) - ord('A'))
+            offset = int(self.__key[keyIndex])
             encryptedLetter = chr(ord(letter) + offset)
             encryptedMessage += encryptedLetter
 
@@ -34,8 +37,7 @@ class VigenereCipher(AlgorithmInterface):
         encryptedMessage = encryptedMessage.decode()
         for index, letter in enumerate(encryptedMessage):
             keyIndex = index % len(self.__key)
-            keyLetter = self.__key[keyIndex]
-            offset = abs(ord(keyLetter) - ord('A'))
+            offset = int(self.__key[keyIndex])
             plaintextLetter = chr(ord(letter) - offset)
             plaintextMessage += plaintextLetter
 

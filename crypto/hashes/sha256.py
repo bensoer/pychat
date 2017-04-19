@@ -1,3 +1,4 @@
+__author__='bensoer'
 from crypto.hashes.hashinterface import HashInterface
 from Crypto.Hash import SHA256 as libsha256
 
@@ -10,7 +11,7 @@ class SHA256(HashInterface):
         return sha256.digest()
 
     def getDigestSize(self):
-        return 32
+        return libsha256.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes

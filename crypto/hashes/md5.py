@@ -1,3 +1,4 @@
+__author__='bensoer'
 from crypto.hashes.hashinterface import HashInterface
 from Crypto.Hash import MD5 as libmd5
 
@@ -10,7 +11,7 @@ class MD5(HashInterface):
         return md5.digest()
 
     def getDigestSize(self):
-        return 16
+        return libmd5.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes

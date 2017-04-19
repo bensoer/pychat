@@ -120,7 +120,7 @@ class Cryptor:
         logger.debug("Hash Package Import Successful. Now Attempting Class")
         mod = getattr(pkg, self._strHash)
         logger.debug("Hash Class Import Successful. Loading Into Attributes")
-        self._loadedHash = mod()
+        self._loadedHash = mod(self._arguments)
 
     def setArguments(self, arguments):
         logger.debug("Setting System Arguments As Attribute")
@@ -181,3 +181,11 @@ class Cryptor:
 
     def getDigestSize(self, message):
         logger.debug("Fetching Digest Length For Hash")
+
+    def sendFirstMessageAgain(self):
+        logger.debug("Checking With Algorithm Whether To Send The First Message Again")
+        return self._loadedAlgorithm.callSendFirstMessageAgain()
+
+    def receiveNextMessageThroughFirstMessage(self):
+        logger.debug("Checking With Algorithm Whether To Send Next Received Message Through First Message")
+        return self._loadedAlgorithm.receiveNextMessageThroughFirstMessage()

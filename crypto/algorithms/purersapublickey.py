@@ -1,4 +1,4 @@
-__author__ = 'bsoer'
+__author__ = 'bensoer'
 
 from crypto.algorithms.algorithminterface import AlgorithmInterface
 from tools.argparcer import ArgParcer
@@ -6,7 +6,7 @@ import tools.rsatools as RSATools
 import math
 import sys
 
-class PureRSA(AlgorithmInterface):
+class PureRSAPublicKey(AlgorithmInterface):
 
     n = None
     totient = None

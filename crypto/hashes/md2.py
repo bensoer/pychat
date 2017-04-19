@@ -1,3 +1,4 @@
+__author__='bensoer'
 from crypto.hashes.hashinterface import HashInterface
 from Crypto.Hash import MD2 as libmd2
 
@@ -10,7 +11,7 @@ class MD2(HashInterface):
         return md2.digest()
 
     def getDigestSize(self):
-        return 16
+        return libmd2.digest_size
 
     def isValidHash(self, stringMessage, hashBytes):
         return self.hashString(stringMessage) == hashBytes

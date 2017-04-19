@@ -56,12 +56,50 @@ class AlgorithmInterface(metaclass=ABCMeta):
         by sending system when sendFirstMessage is executed on that system
         :return: Boolean - status as to whether to print the firstMessage to console after calling this method.
         Default returns True = first message will be written to console assuming it is a regular message. Return True
-        will be run through the descyption aglorithm
+        will be run through the decyption algorithm
         '''
 
         self.logger.debug("No Implementation Provided For Receving The First Message. " +
                           "First Message Is Assumed Actual Data")
         return True
+
+    def receiveNextMessageThroughFirstMessage(self):
+        '''
+        sendNextMessageThroughFirstMessage is a general override for controlling at what point to stop sending messages
+        to the receiveFirstMessage method. The receiveFirstMessage functionality is the exact same as stated in its method
+        but by overriding this method, the algorithm can force future methods to continue being send and evaluated
+        through the receiveFirstMessage until sendNextMessageThroughFirstMessage returns false. This is useful for
+        designing algorithms which require multiple data transfers before executing their encryption and decryption
+        methods
+        :return: Boolean - whether or not to send the next received message through receiveFirstMessage. Default value
+        is false. True means the next message received will be passed to receiveFirstMessage and evaluated there
+        before potentially passed to the decryption algorithm. receiveNextMessageThroughFirstMessage is always called
+        first before receiveFirstMessage is called BUT only AFTER the initial first message has been received.
+
+        NOTES:
+         - By setting this value to true, pychat will no longer filter duplicate received FirstMessages. During normal
+         initialization the first terminal to launch receives the first message twice. The pychat framework keeps track
+         of this and does not send the duplicate to the loaded algorithm. By setting
+         receiveNextMessageThroughFirstMessage to true, pychat will send all received messages to the algorithm,
+         regardless of duplication.
+        '''
+        return False
+
+    def callSendFirstMessageAgain(self):
+        '''
+        callSendFirstMessageAgain allows the algorithm to dictate how many times the sendFirstMessage method will be called.
+        Under normal use, sendFirstMessage gets calls twice - once at initialization, and once again after receiveFirstMessage.
+        If the algorithm though needs to send additional initialization information before the encrypt and decrypt methods
+        are called. Returning true to callSendFirstMessageAgain will allow this functionality to occur.
+        :return: Boolean - whether or not to call sendFirstMessage. This method is called ONLY after the first 2 typical
+        startup calls are made. After these first 2, it is then called BEFORE EVERY TIME sendFirstMessage is called.
+        callSendFirstMessage will be triggered whenever an incoming message arrives after the first 2 typical startup
+        calls are made. Order is as follows to a received message:
+            1) - message received -
+            2) IF receiveNextMessageThroughFirstMessage() == TRUE: receiveFirstMessage() ELSE: decryptString()
+            3) IF callSendFirstMessageAgain == TRUE: sendFirstMessage()
+        '''
+        return False
 
     @abstractmethod
     def __init__(self, arguments):
