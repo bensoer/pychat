@@ -1,8 +1,8 @@
-#PyChat
+# PyChat
 
 PyChat is a UDP based terminal chatting program that allows multiple devices to communicate together over a secure connection using an algorithm of their choice. The purpose of the project is to explore encryption algorithms and sending data back and forth securely and minimizing options for external sources to decrypt the data. The project is maintained by [Ben Soer](https://github.com/bensoer) and [Kurtis Bohlen](https://github.com/kbohlen).
 
-#Setup
+# Setup
 
 ## Prerequisites
 You must have python 3.4 installed on your system. On linux this is available on most distros as `python3`. You can check by typing `python3 --version` into your linux bash
